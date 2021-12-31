@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 
 
-def CalculateCRC(byteseq):
+def modbus_crc(byte_sequence):
     """
-        Получает параметром байтовый массив и выполняет Быстрый расчет CRC c полиномом MODBUS
-        как описано в M23x 236.8.0.0 234.9.0.0 rev2013.12.11.pdf
+    Пример:
+            Тест канала связи по адресу 00h: 00h 00h 01h B0h
+            Тест канала связи по адресу 01h: 01h 00h 00h 20h
+    :param byte_sequence: байтовый массив для которого выполняется 'Быстрый расчет CRC c полиномом MODBUS'
+                            как описано в M23x 236.8.0.0 234.9.0.0 rev2013.12.11.pdf
+    :return: 2х байтовое целое в виде байтового массива из двух байт в little-endian порядке
+            (в протоколе нужен big-endian порядок)
     """
-    arrCRC = bytearray([0xFF, 0xFF])
 
-    srCRCHi = bytes([
+    crc_array = bytearray([0xFF, 0xFF])
+
+    sr_crc_hi = bytes([
         0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
         0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
         0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
@@ -43,7 +49,7 @@ def CalculateCRC(byteseq):
         0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40
     ])
 
-    srCRCLo = bytes([
+    sr_crc_lo = bytes([
         0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2,
         0xC6, 0x06, 0x07, 0xC7, 0x05, 0xC5, 0xC4, 0x04,
         0xCC, 0x0C, 0x0D, 0xCD, 0x0F, 0xCF, 0xCE, 0x0E,
@@ -78,15 +84,17 @@ def CalculateCRC(byteseq):
         0x82, 0x42, 0x43, 0x83, 0x41, 0x81, 0x80, 0x40
     ])
 
-    B = bytearray(1)
-    for i in range(len(byteseq)):
-        B[0] = arrCRC[1] ^ byteseq[i]
-        arrCRC[1] = arrCRC[0] ^ srCRCHi[B[0]]
-        arrCRC[0] = srCRCLo[B[0]]
+    one_byte = bytearray(1)
+    for i in range(len(byte_sequence)):
+        one_byte[0] = crc_array[1] ^ byte_sequence[i]
+        crc_array[1] = crc_array[0] ^ sr_crc_hi[one_byte[0]]
+        crc_array[0] = sr_crc_lo[one_byte[0]]
 
-    return arrCRC
+    return crc_array
 
 
 if __name__ == '__main__':
-    print(CalculateCRC(bytes([0x00, 0x00])).hex(' '))  # must be (0x01 0xB0)
-    print(CalculateCRC(bytes([0x01, 0x00])).hex(' '))  # must be (0x00 0x20)
+    print(modbus_crc(bytes([0x00, 0x00])).hex(' '))  # must be [B0 01]
+    print(modbus_crc(bytes([0x01, 0x00])).hex(' '))  # must be [20 00]
+    print(modbus_crc(bytes([0x80, 0x00])).hex(' '))  # must be [70 60]
+#    print(modbus_crc(bytes([0x80, 0x00])).hex(' '))  # must be [70 60]
