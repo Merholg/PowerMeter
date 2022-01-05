@@ -1,8 +1,20 @@
 #!/usr/bin/env python3
 
+from enum import Enum
 import ctypes
 
 c_uint8 = ctypes.c_uint8
+
+
+class Physics(Enum):
+    VOLTAGE = 100
+    CURRENT = 1000
+    POWER = 100
+    POWERFACTOR = 1000
+    FREQUENCY = 100
+    PHASEANGLE = 100
+    NOSINRATIO = 100
+    TEMPERATURE = 1
 
 
 class ByteDDB6(ctypes.Union):
@@ -59,11 +71,12 @@ def sequence_b2ddb1b4b3(in_bytearray=bytearray([0, 0, 0, 0])):
 
 def answer_0811h(in_bytearray=bytearray([0, 0, 0])):
     """
-    :param in_bytearray: возвращаемая при вызове запроса 11h последовательность байт в виде байтмассива
-    :return: кортеж -  направление активной мощности , направление реактивной мощности, величина мощности
+    фаза 0 - сумма фаз
+    :param in_bytearray: возвращаемая при вызове запроса 0811h последовательность байт в виде байтмассива
+    :return: словарь с кортежем -  фаза: (направление активной мощности , направление реактивной мощности, величина)
     """
-    phase = list()
-    phase.append(sequence_ddb1b3b2(in_bytearray))
+    phase = dict()
+    phase[0] = sequence_ddb1b3b2(in_bytearray)
     return phase
 
 
@@ -75,23 +88,26 @@ def answer_0814h(in_bytearray=bytearray([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
                                               направление реактивной мощности – обратное.
         N = 0029E7h = 10727d    S = 10727/100 = 107,27 Вт
         N1 = 0029E7h = 10727d   S1 = 10727/100 = 107,27 Вт
-    :param in_bytearray:
-    :return:
+    фаза 0 - сумма фаз
+    :param in_bytearray: возвращаемая при вызове запроса 0814h последовательность байт в виде байтмассива
+    :return: словарь с кортежем -  фаза: (направление активной мощности , направление реактивной мощности, величина)
     """
-    phase = list()
+    phase = dict()
     if len(in_bytearray) >= 4:
         j = len(in_bytearray) if len(in_bytearray) < 16 else 16
         for i in range(0, j, 4):
-            phase.append(sequence_b2ddb1b4b3(in_bytearray[i:i + 4]))
+            k = len(phase)
+            phase[k] = sequence_b2ddb1b4b3(in_bytearray[i:i + 4])
     j = len(phase)
     for i in range(j, 4):
-        phase.append((0, 0, 0))
+        k = len(phase)
+        phase[k] = (0, 0, 0)
     return phase
 
 
 if __name__ == '__main__':
     print(answer_0811h(bytearray([0x40, 0x2D, 0x02])))
-    # must be [(1, -1, 557)]
+    # must be {0: (1, -1, 557)}
     print(answer_0814h(bytearray([0x00, 0x40, 0xE7, 0x29, 0x00, 0x40, 0xE7, 0x29,
                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])))
-    # must be [(1, -1, 10727), (1, -1, 10727), (1, 1, 0), (1, 1, 0)]
+    # must be {0: (1, -1, 10727), 1: (1, -1, 10727), 2: (1, 1, 0), 3: (1, 1, 0)}
