@@ -241,4 +241,4 @@ if __name__ == '__main__':
     print(
         mercury_rtu.conversion(0x80, bytearray([0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31]), 0x01))  # must be [00]
 
-    print("Ports are:",list_ports.comports())
+    print("Ports are:", list_ports.comports())
