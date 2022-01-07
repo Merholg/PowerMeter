@@ -148,7 +148,18 @@ class MercuryRTU(serial.Serial):
         return crc_array[::-1]
 
     def port_exchange(self, send_sequence, len_recv_sequence):
-        if not super().isOpen():
+
+        # if bytearray([0x80, 0x00, 0x60, 0x70]) == send_sequence:
+        #     print(1, len_recv_sequence, send_sequence.hex(" "))
+        #     return 0, "OK", bytearray([0x80, 0x00, 0x60, 0x70])
+        # elif bytearray([0x80, 0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x48, 0xA8]) == send_sequence:
+        #     print(2, len_recv_sequence, send_sequence.hex(" "))
+        #     return 0, "OK", bytearray([0x80, 0x00, 0x60, 0x70])
+        # else:
+        #     print(3, len_recv_sequence, send_sequence.hex(" "))
+        #     return -5, "OK", bytearray()
+
+        if not super().is_open():
             try:
                 super().open()
             except serial.SerialException as e1:
@@ -176,7 +187,7 @@ class MercuryRTU(serial.Serial):
                                    без 2 байт CRC и 1 байта адреса
         :return: кортеж из кода ошибки и байтовой последовательности без CRC и адреса
         """
-        len_recv_sequence = 4 if len_recv_sequence < 4 or len_recv_sequence > 258 else len_recv_sequence
+        len_recv_sequence = 1 if len_recv_sequence < 1 or len_recv_sequence > 255 else len_recv_sequence
         address = 0 if address < 1 or address > 253 else address
         send_sequence.insert(0, address)
         #        print(send_sequence.hex(" "))
@@ -185,10 +196,10 @@ class MercuryRTU(serial.Serial):
 
         n = 0
         while n < 10:
-            error_num, error_str, recv_sequence = self.port_exchange(send_sequence, len_recv_sequence)
+            error_num, error_str, recv_sequence = self.port_exchange(send_sequence, len_recv_sequence + 3)
             if error_num < 0:
                 return error_num, error_str, recv_sequence
-            if len(recv_sequence) == 4 or len(recv_sequence) == len_recv_sequence:
+            if len(recv_sequence) == 4 or len(recv_sequence) == (len_recv_sequence + 3):
                 if recv_sequence[-2:] == self.modbus_crc(recv_sequence[:-2]):
                     if recv_sequence[0] == address:
                         if len(recv_sequence) == 4:
@@ -225,4 +236,6 @@ if __name__ == '__main__':
             Канал связи открыт.
     """
     mercury_rtu = MercuryRTU()
-#    print(mercury_rtu.conversion(0x80, bytearray([0x00]), 0x60))  # must be [80 00 60 70]
+    print(mercury_rtu.conversion(0x80, bytearray([0x00]), 0x01))  # must be [00]
+    print(
+        mercury_rtu.conversion(0x80, bytearray([0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31]), 0x01))  # must be [00]
