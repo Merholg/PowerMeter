@@ -98,3 +98,4 @@ if __name__ == '__main__':
     print(modbus_crc(bytes([0x01, 0x00])).hex(' '))  # must be [20 00]
     print(modbus_crc(bytes([0x80, 0x00])).hex(' '))  # must be [70 60]
     print(modbus_crc(bytes([0x11, 0x03, 0x00, 0x6B, 0x00, 0x03])).hex(' '))  # must be [87 76] it is Modbus RTU CRC
+    print(modbus_crc(bytes([0x80, 0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31])).hex(' '))  # must be [a8 48]
