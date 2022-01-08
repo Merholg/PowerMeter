@@ -8,8 +8,8 @@ def modbus_crc(byte_sequence):
             Тест канала связи по адресу 01h: 01h 00h 00h 20h
     :param byte_sequence: байтовый массив для которого выполняется 'Быстрый расчет CRC c полиномом MODBUS'
                             как описано в M23x 236.8.0.0 234.9.0.0 rev2013.12.11.pdf
-    :return: 2х байтовое целое в виде байтового массива из двух байт в little-endian порядке
-            (в протоколе нужен big-endian порядок)
+    :return: 2х байтовое целое в виде байтового массива из двух байт в big-endian порядке  (как в пакете протокола)
+
     """
 
     crc_array = bytearray([0xFF, 0xFF])
@@ -90,12 +90,12 @@ def modbus_crc(byte_sequence):
         crc_array[1] = crc_array[0] ^ sr_crc_hi[one_byte[0]]
         crc_array[0] = sr_crc_lo[one_byte[0]]
 
-    return crc_array
+    return crc_array[::-1]
 
 
 if __name__ == '__main__':
-    print(modbus_crc(bytes([0x00, 0x00])).hex(' '))  # must be [B0 01]
-    print(modbus_crc(bytes([0x01, 0x00])).hex(' '))  # must be [20 00]
-    print(modbus_crc(bytes([0x80, 0x00])).hex(' '))  # must be [70 60]
-    print(modbus_crc(bytes([0x11, 0x03, 0x00, 0x6B, 0x00, 0x03])).hex(' '))  # must be [87 76] it is Modbus RTU CRC
-    print(modbus_crc(bytes([0x80, 0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31])).hex(' '))  # must be [a8 48]
+    print(modbus_crc(bytes([0x00, 0x00])).hex(' '))  # must be [01 B0]
+    print(modbus_crc(bytes([0x01, 0x00])).hex(' '))  # must be [00 20]
+    print(modbus_crc(bytes([0x80, 0x00])).hex(' '))  # must be [60 70]
+    print(modbus_crc(bytes([0x11, 0x03, 0x00, 0x6B, 0x00, 0x03])).hex(' '))  # must be [76 87] it is Modbus RTU CRC
+    print(modbus_crc(bytes([0x80, 0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31])).hex(' '))  # must be [48 a8]
