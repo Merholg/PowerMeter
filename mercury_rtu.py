@@ -148,32 +148,38 @@ class MercuryRTU(serial.Serial):
             crc_array[0] = sr_crc_lo[one_byte[0]]
         return crc_array[::-1]
 
+    def port_exchange_test(self):
+        def wrapper(parent_self, send_sequence, len_recv_sequence):
+            print(parent_self)
+            print(self)
+            if bytearray([0x80, 0x00, 0x60, 0x70]) == send_sequence:
+                print(f"Case:1 for {len_recv_sequence=} send sequence are:", send_sequence.hex(" "))
+                return_value = (0, "OK", bytearray([0x80, 0x00, 0x60, 0x70]))
+            elif bytearray([0x80, 0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x48, 0xA8]) == send_sequence:
+                print(f"Case:2 for {len_recv_sequence=} send sequence are:", send_sequence.hex(" "))
+                return_value = (0, "OK", bytearray([0x80, 0x00, 0x60, 0x70]))
+            else:
+                print(f"Case:3 for {len_recv_sequence=} send sequence are:", send_sequence.hex(" "))
+                return_value = (-5, "NOT OK", bytearray())
+            return return_value
+        return wrapper
+
+    # @port_exchange_test  # Decorator for test conversion() without serial ports persist
     def port_exchange(self, send_sequence, len_recv_sequence):
-
-        # if bytearray([0x80, 0x00, 0x60, 0x70]) == send_sequence:
-        #     print(1, len_recv_sequence, send_sequence.hex(" "))
-        #     return 0, "OK", bytearray([0x80, 0x00, 0x60, 0x70])
-        # elif bytearray([0x80, 0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x48, 0xA8]) == send_sequence:
-        #     print(2, len_recv_sequence, send_sequence.hex(" "))
-        #     return 0, "OK", bytearray([0x80, 0x00, 0x60, 0x70])
-        # else:
-        #     print(3, len_recv_sequence, send_sequence.hex(" "))
-        #     return -5, "OK", bytearray()
-
         if not super().isOpen():
             try:
                 super().open()
-            except serial.SerialException as e1:
-                return -1, f"Unexpected{e1=}, {type(e1)=}. Error open serial port: " + str(e1), bytearray()
+            except serial.SerialException as error_1:
+                return -1, f"Error open serial port: {error_1=}", bytearray()
 
         try:
             super().reset_input_buffer()
             super().reset_output_buffer()
             super().write(send_sequence)
             recv_sequence = super().read(len_recv_sequence)
-        except serial.SerialException as e2:
+        except serial.SerialException as error_2:
             super().close()
-            return -2, f"Unexpected{e2=}, {type(e2)=}. Error operate for serial port: " + str(e2), bytearray()
+            return -2, f"Error operate for serial port: {error_2=}", bytearray()
 
         return 0, "OK", recv_sequence
 
@@ -214,7 +220,7 @@ class MercuryRTU(serial.Serial):
             if n >= self.quantity_repeat:
                 break
 
-        return -3, f"Error read port for {n=} times: " + str(n), bytearray()
+        return -3, f"Error read port for {n=} times", bytearray()
 
     def port_close(self):
         if super().isOpen():
@@ -223,8 +229,6 @@ class MercuryRTU(serial.Serial):
 
 
 if __name__ == '__main__':
-    # help(serial)
-
     """
     Пример:
             Проверить канал связи со счётчиком с сетевым адресом 80h.
@@ -237,8 +241,7 @@ if __name__ == '__main__':
             Канал связи открыт.
     """
     mercury_rtu = MercuryRTU()
-    print(mercury_rtu.conversion(0x80, bytearray([0x00]), 0x01))  # must be [00]
-    print(
-        mercury_rtu.conversion(0x80, bytearray([0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31]), 0x01))  # must be [00]
+    print(mercury_rtu.conversion(0x80, bytearray([0x00]), 0x01))
+    print(mercury_rtu.conversion(0x80, bytearray([0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31]), 0x01))
 
     print("Ports are:", list_ports.comports())
