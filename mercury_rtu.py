@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 # import time
+from enum import Enum
+
 import serial
 from serial import STOPBITS_ONE, PARITY_NONE, EIGHTBITS
 from serial.tools import list_ports
@@ -34,6 +36,15 @@ class MercuryRTU(serial.Serial):
     16+3=19 bytes   19*0,94=17,86 ms 17,86*9600/300=571,52 ms
     """
 
+    class Address(Enum):
+        BEGIN = 1
+        END = 253
+        BROADCAST = 0
+
+    class Lenghts(Enum):
+        MIN = 1
+        MAX = 255
+
     def __init__(self,
                  port=None,
                  baudrate=9600,
@@ -59,6 +70,7 @@ class MercuryRTU(serial.Serial):
             0x04: "Внутренние часы счетчика уже корректировались в течение текущих суток.",
             0x05: "Не открыт канал связи."
         })
+        self.meters = {a: False for a in range(self.Address.BEGIN, self.Address.END + 1)}
 
     @staticmethod
     def modbus_crc(byte_sequence):
@@ -162,6 +174,7 @@ class MercuryRTU(serial.Serial):
                 print(f"Case:3 for {len_recv_sequence=} send sequence are:", send_sequence.hex(" "))
                 return_value = (-5, "NOT OK", bytearray())
             return return_value
+
         return wrapper
 
     # @port_exchange_test  # Decorator for test conversion() without serial ports persist
@@ -183,6 +196,31 @@ class MercuryRTU(serial.Serial):
 
         return 0, "OK", recv_sequence
 
+    def device_check(self, address=None):
+        send_sequence = bytearray()
+        if address is None:
+            for key in self.meters:
+                send_sequence.clear()
+                send_sequence.append(key)
+                send_sequence.append(0x00)
+                send_sequence.extend(self.modbus_crc(send_sequence))
+                error_num, error_str, recv_sequence = self.port_exchange(send_sequence, 4)
+                self.meters[key] = True if 0 == error_num and send_sequence == recv_sequence else False
+        elif 0 == address:
+            send_sequence.extend(bytearray([0x00, 0x00, 0x01, 0xB0]))
+            self.meters = {a: False for a in range(self.Address.BEGIN, self.Address.END + 1)}
+            error_num, error_str, recv_sequence = self.port_exchange(send_sequence, 4)
+            if 0 == error_num and 4 == len(recv_sequence):
+                if recv_sequence[-2:] == self.modbus_crc(recv_sequence[:-2]):
+                    address = recv_sequence[0]
+                    self.meters[address] = True
+        elif address in self.meters:
+            send_sequence.append(address)
+            send_sequence.append(0x00)
+            send_sequence.extend(self.modbus_crc(send_sequence))
+            error_num, error_str, recv_sequence = self.port_exchange(send_sequence, 4)
+            self.meters[address] = True if 0 == error_num and send_sequence == recv_sequence else False
+
     def conversion(self, address, send_sequence, len_recv_sequence):
         """
         Проверяет CRC у принятой последовательности при достижении последней ожидаемых размеров
@@ -192,10 +230,11 @@ class MercuryRTU(serial.Serial):
         :param send_sequence: байтовый массив передаваемой последовательности данных
         :param len_recv_sequence: спсиок содержащий ожидаемые размеры принимаемой последовательности данных
                                    без 2 байт CRC и 1 байта адреса
-        :return: кортеж из кода ошибки и байтовой последовательности без CRC и адреса
+        :return: кортеж из кода ошибки, строки сообщ об ошибке, байтовой последовательности без CRC и адреса, адрес
         """
-        len_recv_sequence = 1 if len_recv_sequence < 1 or len_recv_sequence > 255 else len_recv_sequence
-        address = 0 if address < 1 or address > 253 else address
+        len_recv_sequence = self.Lenghts.MIN if len_recv_sequence < self.Lenghts.MIN or \
+                                                len_recv_sequence > self.Lenghts.MAX else len_recv_sequence
+        address = self.Address.BROADCAST if address < self.Address.BEGIN or address > self.Address.END else address
         send_sequence.insert(0, address)
         #        print(send_sequence.hex(" "))
         send_sequence.extend(self.modbus_crc(send_sequence))
@@ -205,22 +244,22 @@ class MercuryRTU(serial.Serial):
         while n < 10:
             error_num, error_str, recv_sequence = self.port_exchange(send_sequence, len_recv_sequence + 3)
             if error_num < 0:
-                return error_num, error_str, recv_sequence
-            if len(recv_sequence) == 4 or len(recv_sequence) == (len_recv_sequence + 3):
+                return error_num, error_str, recv_sequence, address
+            if 4 == len(recv_sequence) or len(recv_sequence) == (len_recv_sequence + 3):
                 if recv_sequence[-2:] == self.modbus_crc(recv_sequence[:-2]):
-                    if recv_sequence[0] == address:
-                        if len(recv_sequence) == 4:
-                            return recv_sequence[1], \
-                                   "Unresolved error" if recv_sequence[1] > len(self.error_answer) \
-                                   else self.error_answer[recv_sequence[1]], \
-                                   recv_sequence[1:-2]
-                        else:
-                            return 0, self.error_answer[0], recv_sequence[1:-2]
+                    address = recv_sequence[0]
+                    if len(recv_sequence) == 4:
+                        return recv_sequence[1], "Unresolved error" \
+                                                 if recv_sequence[1] > len(self.error_answer) \
+                                                 else self.error_answer[recv_sequence[1]], \
+                               recv_sequence[1:-2], address
+                    else:
+                        return 0, self.error_answer[0], recv_sequence[1:-2], address
             n += 1
             if n >= self.quantity_repeat:
                 break
 
-        return -3, f"Error read port for {n=} times", bytearray()
+        return -3, f"Error read port for {n=} times", bytearray(), address
 
     def port_close(self):
         if super().isOpen():

@@ -1,9 +1,37 @@
 #!/usr/bin/env python3
 
+# from mercury_rtu import MercuryRTU
 from enum import Enum
 import ctypes
 
 c_uint8 = ctypes.c_uint8
+
+
+# class Mercury23x:
+#     """
+#
+#     """
+#
+#     def __init__(self):
+#         self.meters = dict()
+#
+#     def get_meter(self, address):
+#         pass
+#
+#    def search_meters(self, begin_address, end_address):
+#        begin_address = MercuryRTU.Address.BROADCAST if begin_address < MercuryRTU.Address.BEGIN or \
+#                                                        begin_address > MercuryRTU.Address.END else begin_address
+#        if begin_address == MercuryRTU.Address.BROADCAST:
+#            end_address = MercuryRTU.Address.BROADCAST
+#        else:
+#            end_address = MercuryRTU.Address.END if end_address < MercuryRTU.Address.BEGIN or \
+#                                                    end_address > MercuryRTU.Address.END else end_address
+#        if end_address >= begin_address:
+#            address = begin_address
+#            while address <= end_address:
+#                error_num, error_str, recv_sequence, recv_address = MercuryRTU.conversion(address, bytearray[0x00], 1)
+#                if 0 == error_num and not (recv_address in self.meters):
+#                    self.meters[recv_address] = (0, bytearray[0x00], bytearray[0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 
 
 class Physics(Enum):
