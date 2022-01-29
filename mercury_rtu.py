@@ -62,15 +62,21 @@ class MercuryRTU(serial.Serial):
         super().__init__(port, baudrate, bytesize, parity, stopbits, timeout, xonxoff, rtscts, write_timeout, dsrdtr,
                          inter_byte_timeout, exclusive)
         self.quantity_repeat = quantity_repeat
-        self.error_answer = dict({
+        self.error_descript = dict({
             0x00: "Успешно.",
             0x01: "Недопустимая команда или параметр.",
             0x02: "Внутренняя ошибка счетчика.",
             0x03: "Не достаточен уровень доступа для удовлетворения запроса.",
             0x04: "Внутренние часы счетчика уже корректировались в течение текущих суток.",
-            0x05: "Не открыт канал связи."
+            0x05: "Не открыт канал связи.",
+            -1: "",
+            -2: "",
+            -3: "",
+            -5: "Undefined sequence"
         })
         self.meters = {a: False for a in range(self.Address.BEGIN, self.Address.END + 1)}
+        self.send_sequence = bytearray()
+        self.recv_sequence = bytearray()
 
     @staticmethod
     def modbus_crc(byte_sequence):
@@ -161,105 +167,112 @@ class MercuryRTU(serial.Serial):
         return crc_array[::-1]
 
     def port_exchange_test(self):
-        def wrapper(parent_self, send_sequence, len_recv_sequence):
+        def wrapper(parent_self, len_recv_sequence):
             print(parent_self)
             print(self)
-            if bytearray([0x80, 0x00, 0x60, 0x70]) == send_sequence:
-                print(f"Case:1 for {len_recv_sequence=} send sequence are:", send_sequence.hex(" "))
-                return_value = (0, "OK", bytearray([0x80, 0x00, 0x60, 0x70]))
-            elif bytearray([0x80, 0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x48, 0xA8]) == send_sequence:
-                print(f"Case:2 for {len_recv_sequence=} send sequence are:", send_sequence.hex(" "))
-                return_value = (0, "OK", bytearray([0x80, 0x00, 0x60, 0x70]))
+            if bytearray([0x80, 0x00, 0x60, 0x70]) == self.send_sequence:
+                print(f"Case:1 for {len_recv_sequence=} send sequence are:", self.send_sequence.hex(" "))
+                self.recv_sequence.clear()
+                self.recv_sequence.extend(bytearray([0x80, 0x00, 0x60, 0x70]))
+                return_value = 0
+            elif bytearray([0x80, 0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x48, 0xA8]) == self.send_sequence:
+                print(f"Case:2 for {len_recv_sequence=} send sequence are:", self.send_sequence.hex(" "))
+                self.recv_sequence.clear()
+                self.recv_sequence.extend(bytearray([0x80, 0x00, 0x60, 0x70]))
+                return_value = 0
             else:
-                print(f"Case:3 for {len_recv_sequence=} send sequence are:", send_sequence.hex(" "))
-                return_value = (-5, "NOT OK", bytearray())
+                print(f"Case:3 for {len_recv_sequence=} send sequence are:", self.send_sequence.hex(" "))
+                self.recv_sequence.clear()
+                return_value = -5
             return return_value
 
         return wrapper
 
     # @port_exchange_test  # Decorator for test conversion() without serial ports persist
-    def port_exchange(self, send_sequence, len_recv_sequence):
+    def port_exchange(self, len_recv_sequence):
         if not super().isOpen():
             try:
                 super().open()
             except serial.SerialException as error_1:
-                return -1, f"Error open serial port: {error_1=}", bytearray()
+                self.recv_sequence.clear()
+                self.error_descript[-1] = f"Error open serial port: {error_1=}"
+                return -1
 
         try:
             super().reset_input_buffer()
             super().reset_output_buffer()
-            super().write(send_sequence)
-            recv_sequence = super().read(len_recv_sequence)
+            super().write(self.send_sequence)
+            self.recv_sequence.clear()
+            self.recv_sequence.extend(super().read(len_recv_sequence))
         except serial.SerialException as error_2:
             super().close()
-            return -2, f"Error operate for serial port: {error_2=}", bytearray()
+            self.error_descript[-2] = f"Error operate for serial port: {error_2=}"
+            return -2
 
-        return 0, "OK", recv_sequence
+        return 0
 
     def device_check(self, address=None):
-        send_sequence = bytearray()
         if address is None:
             for key in self.meters:
-                send_sequence.clear()
-                send_sequence.append(key)
-                send_sequence.append(0x00)
-                send_sequence.extend(self.modbus_crc(send_sequence))
-                error_num, error_str, recv_sequence = self.port_exchange(send_sequence, 4)
-                self.meters[key] = True if 0 == error_num and send_sequence == recv_sequence else False
+                self.send_sequence.clear()
+                self.send_sequence.append(key)
+                self.send_sequence.append(0x00)
+                self.send_sequence.extend(self.modbus_crc(self.send_sequence))
+                error_num = self.port_exchange(4)
+                self.meters[key] = True if 0 == error_num and self.send_sequence == self.recv_sequence else False
         elif 0 == address:
-            send_sequence.extend(bytearray([0x00, 0x00, 0x01, 0xB0]))
+            self.send_sequence.clear()
+            self.send_sequence.extend(bytearray([0x00, 0x00, 0x01, 0xB0]))
             self.meters = {a: False for a in range(self.Address.BEGIN, self.Address.END + 1)}
-            error_num, error_str, recv_sequence = self.port_exchange(send_sequence, 4)
-            if 0 == error_num and 4 == len(recv_sequence):
-                if recv_sequence[-2:] == self.modbus_crc(recv_sequence[:-2]):
-                    address = recv_sequence[0]
+            error_num = self.port_exchange(4)
+            if 0 == error_num and 4 == len(self.recv_sequence):
+                if self.recv_sequence[-2:] == self.modbus_crc(self.recv_sequence[:-2]):
+                    address = self.recv_sequence[0]
                     self.meters[address] = True
         elif address in self.meters:
-            send_sequence.append(address)
-            send_sequence.append(0x00)
-            send_sequence.extend(self.modbus_crc(send_sequence))
-            error_num, error_str, recv_sequence = self.port_exchange(send_sequence, 4)
-            self.meters[address] = True if 0 == error_num and send_sequence == recv_sequence else False
+            self.send_sequence.append(address)
+            self.send_sequence.append(0x00)
+            self.send_sequence.extend(self.modbus_crc(self.send_sequence))
+            error_num = self.port_exchange(4)
+            self.meters[address] = True if 0 == error_num and self.send_sequence == self.recv_sequence else False
 
-    def conversion(self, address, send_sequence, len_recv_sequence):
+    def conversion(self, address, len_recv_sequence):
         """
         Проверяет CRC у принятой последовательности при достижении последней ожидаемых размеров
 
         либо возвращает пустой массив если timeout или ошибка и ненулевой код ошибки
         :param address: однобайтовый адрес получателя
-        :param send_sequence: байтовый массив передаваемой последовательности данных
         :param len_recv_sequence: спсиок содержащий ожидаемые размеры принимаемой последовательности данных
                                    без 2 байт CRC и 1 байта адреса
-        :return: кортеж из кода ошибки, строки сообщ об ошибке, байтовой последовательности без CRC и адреса, адрес
+        :return: код ошибки
         """
         len_recv_sequence = self.Lenghts.MIN if len_recv_sequence < self.Lenghts.MIN or \
                                                 len_recv_sequence > self.Lenghts.MAX else len_recv_sequence
-        address = self.Address.BROADCAST if address < self.Address.BEGIN or address > self.Address.END else address
-        send_sequence.insert(0, address)
+        address = self.Address.BEGIN if address < self.Address.BEGIN or address > self.Address.END else address
+        self.send_sequence.insert(0, address)
         #        print(send_sequence.hex(" "))
-        send_sequence.extend(self.modbus_crc(send_sequence))
+        self.send_sequence.extend(self.modbus_crc(self.send_sequence))
         #        print(send_sequence.hex(" "))
 
         n = 0
         while n < 10:
-            error_num, error_str, recv_sequence = self.port_exchange(send_sequence, len_recv_sequence + 3)
+            error_num = self.port_exchange(len_recv_sequence + 3)
             if error_num < 0:
-                return error_num, error_str, recv_sequence, address
-            if 4 == len(recv_sequence) or len(recv_sequence) == (len_recv_sequence + 3):
-                if recv_sequence[-2:] == self.modbus_crc(recv_sequence[:-2]):
-                    address = recv_sequence[0]
-                    if len(recv_sequence) == 4:
-                        return recv_sequence[1], "Unresolved error" \
-                                                 if recv_sequence[1] > len(self.error_answer) \
-                                                 else self.error_answer[recv_sequence[1]], \
-                               recv_sequence[1:-2], address
+                return error_num
+            if 4 == len(self.recv_sequence) or (len_recv_sequence + 3) == len(self.recv_sequence):
+                if self.recv_sequence[-2:] == self.modbus_crc(self.recv_sequence[:-2]):
+                    del self.recv_sequence[0]
+                    del self.recv_sequence[-2:]
+                    if 1 == len(self.recv_sequence):
+                        return self.recv_sequence[0]
                     else:
-                        return 0, self.error_answer[0], recv_sequence[1:-2], address
+                        return 0
             n += 1
             if n >= self.quantity_repeat:
                 break
 
-        return -3, f"Error read port for {n=} times", bytearray(), address
+        self.error_descript[-3] = f"Error read port for {n=} times"
+        return -3
 
     def port_close(self):
         if super().isOpen():
@@ -280,7 +293,11 @@ if __name__ == '__main__':
             Канал связи открыт.
     """
     mercury_rtu = MercuryRTU()
-    print(mercury_rtu.conversion(0x80, bytearray([0x00]), 0x01))
-    print(mercury_rtu.conversion(0x80, bytearray([0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31]), 0x01))
+    mercury_rtu.send_sequence.clear()
+    mercury_rtu.send_sequence.extend(bytearray([0x00]))
+    print(mercury_rtu.conversion(0x80, 1))
+    mercury_rtu.send_sequence.clear()
+    mercury_rtu.send_sequence.extend(bytearray([0x01, 0x01, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31]))
+    print(mercury_rtu.conversion(0x80, 1))
 
     print("Ports are:", list_ports.comports())
