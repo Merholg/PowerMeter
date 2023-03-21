@@ -5,6 +5,7 @@ from enum import Enum
 import ctypes
 
 c_uint8 = ctypes.c_uint8
+c_uint32 = ctypes.c_uint32
 
 
 # class Mercury23x:
@@ -45,8 +46,8 @@ class Physics(Enum):
     TEMPERATURE = 1
 
 
-class ByteDDB6(ctypes.Union):
-    class DDB6(ctypes.BigEndianStructure):
+class ByteX2X6(ctypes.Union):
+    class X2X6(ctypes.BigEndianStructure):
         """
         struct BYTE1DDB6
         {
@@ -68,27 +69,33 @@ class ByteDDB6(ctypes.Union):
         ]
 
     _fields_ = [
-        ("dd6b", DDB6),
+        ("x2x6", X2X6),
         ("one_byte", c_uint8)
     ]
 
 
-def sequence_ddb1b3b2(in_bytearray=bytearray([0, 0, 0])):
-    if len(in_bytearray) < 3:
-        return 0, 0, 0
-    byte_ddb6 = ByteDDB6()
-    byte_ddb6.one_byte = in_bytearray[0]
-    direct_active = 1 if byte_ddb6.dd6b.direct_act == 0 else -1
-    direct_reactive = 1 if byte_ddb6.dd6b.direct_react == 0 else -1
-    volume = int.from_bytes(bytearray([byte_ddb6.dd6b.b1, in_bytearray[2], in_bytearray[1]]),
-                            byteorder='big', signed=False)
-    return direct_active, direct_reactive, volume
+class B1x2x6B3B2:
+    def __init__(self, in_bytearray=bytearray([0, 0, 0])):
+        super().__init__()
+        if len(in_bytearray) < 3:
+            self.in_bytearray = bytearray([0, 0, 0])
+        elif len(in_bytearray) > 3:
+            self.in_bytearray = in_bytearray[:3]
+        else:
+            self.in_bytearray = in_bytearray[:]
+        self.byte_ddb6 = ByteX2X6()
+
+        self.byte_ddb6.one_byte = self.in_bytearray[0]
+        self.direct_active = 1 if self.byte_ddb6.x2x6.direct_act == 0 else -1
+        self.direct_reactive = 1 if self.byte_ddb6.x2x6.direct_react == 0 else -1
+        self.volume = int.from_bytes(bytearray([self.byte_ddb6.x2x6.b1, self.in_bytearray[2], self.in_bytearray[1]]),
+                                     byteorder='big', signed=False)
 
 
 def sequence_b2ddb1b4b3(in_bytearray=bytearray([0, 0, 0, 0])):
     if len(in_bytearray) < 4:
         return 0, 0, 0
-    byte_ddb6 = ByteDDB6()
+    byte_ddb6 = ByteX2X6()
     byte_ddb6.one_byte = in_bytearray[1]
     direct_active = 1 if byte_ddb6.dd6b.direct_act == 0 else -1
     direct_reactive = 1 if byte_ddb6.dd6b.direct_react == 0 else -1
