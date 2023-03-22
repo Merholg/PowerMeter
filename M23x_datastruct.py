@@ -75,14 +75,30 @@ class ByteX2X6(ctypes.Union):
 
 
 class B1x2x6B3B2:
+    """
+    struct BYTE1DD32
+    {
+        unsigned char B1          :6; //байт 1
+        unsigned char DirectRPower:1; // Направление реактивной мощности: 0 – прямое; 1 – обратное.
+        unsigned char DirectAPower:1; // Направление активной мощности: 0 – прямое; 1 – обратное.
+        unsigned char B3          :8; //байт 3
+        unsigned char B2          :8; //байт 2
+    };
+    """
+
     def __init__(self, in_bytearray=bytearray([0, 0, 0])):
         super().__init__()
-        if len(in_bytearray) < 3:
-            self.in_bytearray = bytearray([0, 0, 0])
-        elif len(in_bytearray) > 3:
-            self.in_bytearray = in_bytearray[:3]
+        if isinstance(in_bytearray, bytearray):
+            if len(in_bytearray) < 3:
+                self.in_bytearray = bytearray()
+                for in_byte in in_bytearray:
+                    self.in_bytearray.append(in_byte)
+                for i in range(3 - len(self.in_bytearray)):
+                    self.in_bytearray.append(0)
+            else:
+                self.in_bytearray = in_bytearray[:3]
         else:
-            self.in_bytearray = in_bytearray[:]
+            self.in_bytearray = bytearray([0, 0, 0])
         self.byte_ddb6 = ByteX2X6()
 
         self.byte_ddb6.one_byte = self.in_bytearray[0]
@@ -92,26 +108,50 @@ class B1x2x6B3B2:
                                      byteorder='big', signed=False)
 
 
-def sequence_b2ddb1b4b3(in_bytearray=bytearray([0, 0, 0, 0])):
-    if len(in_bytearray) < 4:
-        return 0, 0, 0
-    byte_ddb6 = ByteX2X6()
-    byte_ddb6.one_byte = in_bytearray[1]
-    direct_active = 1 if byte_ddb6.dd6b.direct_act == 0 else -1
-    direct_reactive = 1 if byte_ddb6.dd6b.direct_react == 0 else -1
-    volume = int.from_bytes(bytearray([byte_ddb6.dd6b.b1, in_bytearray[0], in_bytearray[3], in_bytearray[2]]),
-                            byteorder='big', signed=False)
-    return direct_active, direct_reactive, volume
+class B2B1x2x6B4B3:
+    """
+    struct BYTE1DD32
+    {
+        unsigned char B2          :8; //байт 2
+        unsigned char B1          :6; //байт 1
+        unsigned char DirectRPower:1; // Направление реактивной мощности: 0 – прямое; 1 – обратное.
+        unsigned char DirectAPower:1; // Направление активной мощности: 0 – прямое; 1 – обратное.
+        unsigned char B4          :8; //байт 4
+        unsigned char B3          :8; //байт 3
+    };
+    """
+
+    def __init__(self, in_bytearray=bytearray([0, 0, 0, 0])):
+        super().__init__()
+        if isinstance(in_bytearray, bytearray):
+            if len(in_bytearray) < 4:
+                self.in_bytearray = bytearray()
+                for in_byte in in_bytearray:
+                    self.in_bytearray.append(in_byte)
+                for i in range(4 - len(self.in_bytearray)):
+                    self.in_bytearray.append(0)
+            else:
+                self.in_bytearray = in_bytearray[:4]
+        else:
+            self.in_bytearray = bytearray([0, 0, 0, 0])
+        self.byte_ddb6 = ByteX2X6()
+
+        self.byte_ddb6.one_byte = self.in_bytearray[1]
+        self.direct_active = 1 if self.byte_ddb6.x2x6.direct_act == 0 else -1
+        self.direct_reactive = 1 if self.byte_ddb6.x2x6.direct_react == 0 else -1
+        self.volume = int.from_bytes(bytearray([self.byte_ddb6.x2x6.b1, self.in_bytearray[0], self.in_bytearray[3],
+                                                self.in_bytearray[2]]), byteorder='big', signed=False)
 
 
 def answer_0811h(in_bytearray=bytearray([0, 0, 0])):
     """
     фаза 0 - сумма фаз
     :param in_bytearray: возвращаемая при вызове запроса 0811h последовательность байт в виде байтмассива
-    :return: словарь с кортежем -  фаза: (направление активной мощности , направление реактивной мощности, величина)
+    :return: словарь с кортежем -  фаза: (величина, направление активной мощности , направление реактивной мощности)
     """
     phase = dict()
-    phase[0] = sequence_ddb1b3b2(in_bytearray)
+    power = B1x2x6B3B2(in_bytearray)
+    phase[0] = (power.volume, power.direct_active, power.direct_reactive)
     return phase
 
 
