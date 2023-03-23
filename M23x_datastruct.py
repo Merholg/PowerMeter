@@ -83,7 +83,7 @@ class B1B2:
     };
     """
 
-    def __init__(self, in_bytearray=bytearray([0] * 3)):
+    def __init__(self, in_bytearray=bytearray([0] * 2)):
         super().__init__()
         m = 2
         if isinstance(in_bytearray, bytearray):
@@ -99,7 +99,7 @@ class B1B2:
 
         self.direct_active = 0
         self.direct_reactive = 0
-        self.volume = int.from_bytes(bytearray(self.in_bytearray[0], self.in_bytearray[1]),
+        self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[1]]),
                                      byteorder='big', signed=False)
 
 
@@ -112,7 +112,7 @@ class B2B1:
     };
     """
 
-    def __init__(self, in_bytearray=bytearray([0] * 3)):
+    def __init__(self, in_bytearray=bytearray([0] * 2)):
         super().__init__()
         m = 2
         if isinstance(in_bytearray, bytearray):
@@ -128,7 +128,7 @@ class B2B1:
 
         self.direct_active = 0
         self.direct_reactive = 0
-        self.volume = int.from_bytes(bytearray(self.in_bytearray[1], self.in_bytearray[0]),
+        self.volume = int.from_bytes(bytearray([self.in_bytearray[1], self.in_bytearray[0]]),
                                      byteorder='big', signed=False)
 
 
