@@ -1,49 +1,23 @@
 #!/usr/bin/env python3
 
 # from mercury_rtu import MercuryRTU
-from enum import Enum
+from dataclasses import dataclass
 import ctypes
 
 c_uint8 = ctypes.c_uint8
 c_uint32 = ctypes.c_uint32
 
 
-# class Mercury23x:
-#     """
-#
-#     """
-#
-#     def __init__(self):
-#         self.meters = dict()
-#
-#     def get_meter(self, address):
-#         pass
-#
-#    def search_meters(self, begin_address, end_address):
-#        begin_address = MercuryRTU.Address.BROADCAST if begin_address < MercuryRTU.Address.BEGIN or \
-#                                                        begin_address > MercuryRTU.Address.END else begin_address
-#        if begin_address == MercuryRTU.Address.BROADCAST:
-#            end_address = MercuryRTU.Address.BROADCAST
-#        else:
-#            end_address = MercuryRTU.Address.END if end_address < MercuryRTU.Address.BEGIN or \
-#                                                    end_address > MercuryRTU.Address.END else end_address
-#        if end_address >= begin_address:
-#            address = begin_address
-#            while address <= end_address:
-#                error_num, error_str, recv_sequence, recv_address = MercuryRTU.conversion(address, bytearray[0x00], 1)
-#                if 0 == error_num and not (recv_address in self.meters):
-#                    self.meters[recv_address] = (0, bytearray[0x00], bytearray[0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-
-
-class Physics(Enum):
-    VOLTAGE = 100
-    CURRENT = 1000
-    POWER = 100
-    POWERFACTOR = 1000
-    FREQUENCY = 100
-    PHASEANGLE = 100
-    NOSINRATIO = 100
-    TEMPERATURE = 1
+@dataclass
+class Physics:
+    VOLTAGE: int = 100
+    CURRENT: int = 1000
+    POWER: int = 100
+    POWERFACTOR: int = 1000
+    FREQUENCY: int = 100
+    PHASEANGLE: int = 100
+    NOSINRATIO: int = 100
+    TEMPERATURE: int = 1
 
 
 class ByteX2X6(ctypes.Union):
@@ -160,7 +134,7 @@ class B1B3B2:
         self.direct_reactive = 0
         self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[2], self.in_bytearray[1]]),
                                      byteorder='big', signed=False)
-
+        print(self.in_bytearray, self.volume)
 
 class B2B1B4B3:
     """
@@ -337,8 +311,8 @@ def answer_081408h(in_bytearray=bytearray([0] * 16)):
 
 
 if __name__ == '__main__':
-    print(answer_081111h(bytearray([0x40, 0x2D, 0x02])))
-    # must be {0: (1, -1, 557)}
+    print(answer_081111h(bytearray([0x00, 0x2D, 0x02])))
+    # must be {0: (5.57, 0, 0)}
     print(answer_081408h(bytearray([0x00, 0x40, 0xE7, 0x29, 0x00, 0x40, 0xE7, 0x29,
                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])))
-    # must be {0: (1, -1, 10727), 1: (1, -1, 10727), 2: (1, 1, 0), 3: (1, 1, 0)}
+    # must be {0: (107.27, 1, -1), 1: (107.27, 1, -1), 2: (0.0, 1, 1), 3: (0.0, 1, 1)}
