@@ -74,9 +74,67 @@ class ByteX2X6(ctypes.Union):
     ]
 
 
+class B1B2:
+    """
+    struct BYTE12
+    {
+        unsigned char B1          :8; //байт 1
+        unsigned char B2          :8; //байт 2
+    };
+    """
+
+    def __init__(self, in_bytearray=bytearray([0] * 3)):
+        super().__init__()
+        m = 2
+        if isinstance(in_bytearray, bytearray):
+            n = len(in_bytearray)
+            if n < m:
+                self.in_bytearray = in_bytearray[:]
+                for i in range(m - n):
+                    self.in_bytearray.append(0)
+            else:
+                self.in_bytearray = in_bytearray[:m]
+        else:
+            self.in_bytearray = bytearray([0] * m)
+
+        self.direct_active = 0
+        self.direct_reactive = 0
+        self.volume = int.from_bytes(bytearray(self.in_bytearray[0], self.in_bytearray[1]),
+                                     byteorder='big', signed=False)
+
+
+class B2B1:
+    """
+    struct BYTE21
+    {
+        unsigned char B2          :8; //байт 2
+        unsigned char B1          :8; //байт 1
+    };
+    """
+
+    def __init__(self, in_bytearray=bytearray([0] * 3)):
+        super().__init__()
+        m = 2
+        if isinstance(in_bytearray, bytearray):
+            n = len(in_bytearray)
+            if n < m:
+                self.in_bytearray = in_bytearray[:]
+                for i in range(m - n):
+                    self.in_bytearray.append(0)
+            else:
+                self.in_bytearray = in_bytearray[:m]
+        else:
+            self.in_bytearray = bytearray([0] * m)
+
+        self.direct_active = 0
+        self.direct_reactive = 0
+        self.volume = int.from_bytes(bytearray(self.in_bytearray[1], self.in_bytearray[0]),
+                                     byteorder='big', signed=False)
+
+
 class B1B3B2:
     """
-    struct BYTE1DD32
+    struct BYTE132
     {
         unsigned char B1          :8; //байт 1
         unsigned char B3          :8; //байт 3
@@ -102,6 +160,37 @@ class B1B3B2:
         self.direct_reactive = 0
         self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[2], self.in_bytearray[1]]),
                                      byteorder='big', signed=False)
+
+
+class B2B1B4B3:
+    """
+    struct BYTE2143
+    {
+        unsigned char B2          :8; //байт 2
+        unsigned char B1          :8; //байт 1
+        unsigned char B4          :8; //байт 4
+        unsigned char B3          :8; //байт 3
+    };
+    """
+
+    def __init__(self, in_bytearray=bytearray([0] * 4)):
+        super().__init__()
+        m = 4
+        if isinstance(in_bytearray, bytearray):
+            n = len(in_bytearray)
+            if n < m:
+                self.in_bytearray = in_bytearray[:]
+                for i in range(m - n):
+                    self.in_bytearray.append(0)
+            else:
+                self.in_bytearray = in_bytearray[:m]
+        else:
+            self.in_bytearray = bytearray([0] * m)
+
+        self.direct_active = 0
+        self.direct_reactive = 0
+        self.volume = int.from_bytes(bytearray([self.in_bytearray[1], self.in_bytearray[0], self.in_bytearray[3],
+                                                self.in_bytearray[2]]), byteorder='big', signed=False)
 
 
 class B1x2x6B3B2:
@@ -140,7 +229,7 @@ class B1x2x6B3B2:
 
 class B2B1x2x6B4B3:
     """
-    struct BYTE1DD32
+    struct BYTE21DD43
     {
         unsigned char B2          :8; //байт 2
         unsigned char B1          :6; //байт 1
