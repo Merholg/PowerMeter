@@ -74,6 +74,36 @@ class ByteX2X6(ctypes.Union):
     ]
 
 
+class B1B3B2:
+    """
+    struct BYTE1DD32
+    {
+        unsigned char B1          :8; //байт 1
+        unsigned char B3          :8; //байт 3
+        unsigned char B2          :8; //байт 2
+    };
+    """
+
+    def __init__(self, in_bytearray=bytearray([0] * 3)):
+        super().__init__()
+        m = 3
+        if isinstance(in_bytearray, bytearray):
+            n = len(in_bytearray)
+            if n < m:
+                self.in_bytearray = in_bytearray[:]
+                for i in range(m - n):
+                    self.in_bytearray.append(0)
+            else:
+                self.in_bytearray = in_bytearray[:m]
+        else:
+            self.in_bytearray = bytearray([0] * m)
+
+        self.direct_active = 0
+        self.direct_reactive = 0
+        self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[2], self.in_bytearray[1]]),
+                                     byteorder='big', signed=False)
+
+
 class B1x2x6B3B2:
     """
     struct BYTE1DD32
@@ -86,19 +116,19 @@ class B1x2x6B3B2:
     };
     """
 
-    def __init__(self, in_bytearray=bytearray([0, 0, 0])):
+    def __init__(self, in_bytearray=bytearray([0] * 3)):
         super().__init__()
+        m = 3
         if isinstance(in_bytearray, bytearray):
-            if len(in_bytearray) < 3:
-                self.in_bytearray = bytearray()
-                for in_byte in in_bytearray:
-                    self.in_bytearray.append(in_byte)
-                for i in range(3 - len(self.in_bytearray)):
+            n = len(in_bytearray)
+            if n < m:
+                self.in_bytearray = in_bytearray[:]
+                for i in range(m - n):
                     self.in_bytearray.append(0)
             else:
-                self.in_bytearray = in_bytearray[:3]
+                self.in_bytearray = in_bytearray[:m]
         else:
-            self.in_bytearray = bytearray([0, 0, 0])
+            self.in_bytearray = bytearray([0] * m)
         self.byte_ddb6 = ByteX2X6()
 
         self.byte_ddb6.one_byte = self.in_bytearray[0]
@@ -121,19 +151,19 @@ class B2B1x2x6B4B3:
     };
     """
 
-    def __init__(self, in_bytearray=bytearray([0, 0, 0, 0])):
+    def __init__(self, in_bytearray=bytearray([0] * 4)):
         super().__init__()
+        m = 4
         if isinstance(in_bytearray, bytearray):
-            if len(in_bytearray) < 4:
-                self.in_bytearray = bytearray()
-                for in_byte in in_bytearray:
-                    self.in_bytearray.append(in_byte)
-                for i in range(4 - len(self.in_bytearray)):
+            n = len(in_bytearray)
+            if n < m:
+                self.in_bytearray = in_bytearray[:]
+                for i in range(m - n):
                     self.in_bytearray.append(0)
             else:
-                self.in_bytearray = in_bytearray[:4]
+                self.in_bytearray = in_bytearray[:m]
         else:
-            self.in_bytearray = bytearray([0, 0, 0, 0])
+            self.in_bytearray = bytearray([0] * m)
         self.byte_ddb6 = ByteX2X6()
 
         self.byte_ddb6.one_byte = self.in_bytearray[1]
@@ -143,46 +173,83 @@ class B2B1x2x6B4B3:
                                                 self.in_bytearray[2]]), byteorder='big', signed=False)
 
 
-def answer_0811h(in_bytearray=bytearray([0, 0, 0])):
+def answer_081111h(in_bytearray=bytearray([0] * 3)):
     """
+    Прочитать напряжения по 1-ой фазе для счетчика с сетевым адресом 128 (используем запрос с номером 11h).
+    Запрос: 80 08 11 11 (CRC)
+    Ответ: 80 00 5B 56 (CRC)
+    Значение напряжения на 1-ой фазе
+    N = 00565Bh = 22423d U = 22423/100 = 224,43 В
     фаза 0 - сумма фаз
     :param in_bytearray: возвращаемая при вызове запроса 0811h последовательность байт в виде байтмассива
     :return: словарь с кортежем -  фаза: (величина, направление активной мощности , направление реактивной мощности)
     """
     phase = dict()
-    power = B1x2x6B3B2(in_bytearray)
-    phase[0] = (power.volume, power.direct_active, power.direct_reactive)
+    m = 3  # общая длина последовательности
+    k = 3  # длина последовательности по каждой фазе
+    if isinstance(in_bytearray, bytearray):
+        n = len(in_bytearray)
+        if n < m:
+            trust_bytearray = in_bytearray[:]
+            for i in range(m - n):
+                trust_bytearray.append(0)
+        else:
+            trust_bytearray = in_bytearray[:m]
+    else:
+        trust_bytearray = bytearray([0] * m)
+
+    j = 0
+    for i in range(0, m, k):
+        power = B1B3B2(trust_bytearray[i:i + k])
+        phase[j] = (power.volume / Physics.VOLTAGE, 0, 0)
+        j += 1
+
     return phase
 
 
-def answer_0814h(in_bytearray=bytearray([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])):
+def answer_081408h(in_bytearray=bytearray([0] * 16)):
     """
-    00 40 E7 29 00 40 E7 29 00 00 00 00 00 00 00 00
+    Прочитать мгновенную полную мощность по сумме фаз для счетчика с сетевым адресом 128 (используем запрос с номером 14h).
+    Запрос: 80 08 14 08 (CRC)
+    Ответ: 80 00 40 E7 29 00 40 E7 29 00 00 00 00 00 00 00 00 (CRC)
+    Значение мгновенной полной мощности по сумме фаз - 4 BYTE
+    Значение мгновенной полной мощности по 1-ой фазе - 4 BYTE
+    Значение мгновенной полной мощности по 2-ой фазе - 4 BYTE
+    Значение мгновенной полной мощности по 3-ей фазе - 4 BYTE
+
     Значение полной мощности по сумме фаз:
-        Значение 1-го байта = 40 = 01000000 - направление активной мощности – прямое,
-                                              направление реактивной мощности – обратное.
-        N = 0029E7h = 10727d    S = 10727/100 = 107,27 Вт
-        N1 = 0029E7h = 10727d   S1 = 10727/100 = 107,27 Вт
-    фаза 0 - сумма фаз
+    Значение 1-го байта = 40 = 01000000 - направление активной мощности – прямое, направление реактивной мощности – обратное.
+    N = 0029E7h = 10727d S = 10727/100 = 107,27 Вт
+    N 1 = 0029E7h = 10727d S 1 = 10727/100 = 107,27 Втфаза 0 - сумма фаз
     :param in_bytearray: возвращаемая при вызове запроса 0814h последовательность байт в виде байтмассива
     :return: словарь с кортежем -  фаза: (направление активной мощности , направление реактивной мощности, величина)
     """
     phase = dict()
-    if len(in_bytearray) >= 4:
-        j = len(in_bytearray) if len(in_bytearray) < 16 else 16
-        for i in range(0, j, 4):
-            k = len(phase)
-            phase[k] = sequence_b2ddb1b4b3(in_bytearray[i:i + 4])
-    j = len(phase)
-    for i in range(j, 4):
-        k = len(phase)
-        phase[k] = (0, 0, 0)
+    m = 16  # общая длина последовательности
+    k = 4  # длина последовательности по каждой фазе
+    if isinstance(in_bytearray, bytearray):
+        n = len(in_bytearray)
+        if n < m:
+            trust_bytearray = in_bytearray[:]
+            for i in range(m - n):
+                trust_bytearray.append(0)
+        else:
+            trust_bytearray = in_bytearray[:m]
+    else:
+        trust_bytearray = bytearray([0] * m)
+
+    j = 0
+    for i in range(0, m, k):
+        power = B2B1x2x6B4B3(trust_bytearray[i:i + k])
+        phase[j] = (power.volume / Physics.POWER, power.direct_active, power.direct_reactive)
+        j += 1
+
     return phase
 
 
 if __name__ == '__main__':
-    print(answer_0811h(bytearray([0x40, 0x2D, 0x02])))
+    print(answer_081111h(bytearray([0x40, 0x2D, 0x02])))
     # must be {0: (1, -1, 557)}
-    print(answer_0814h(bytearray([0x00, 0x40, 0xE7, 0x29, 0x00, 0x40, 0xE7, 0x29,
-                                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])))
+    print(answer_081408h(bytearray([0x00, 0x40, 0xE7, 0x29, 0x00, 0x40, 0xE7, 0x29,
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])))
     # must be {0: (1, -1, 10727), 1: (1, -1, 10727), 2: (1, 1, 0), 3: (1, 1, 0)}
