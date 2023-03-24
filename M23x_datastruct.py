@@ -2,13 +2,16 @@
 
 # from mercury_rtu import MercuryRTU
 from dataclasses import dataclass
+from collections import namedtuple
 import ctypes
 
 c_uint8 = ctypes.c_uint8
 c_uint32 = ctypes.c_uint32
 
+RetAnswerFunctions = namedtuple('RetAnswerFunctions', 'Volume DirectActive DirectReactive')
 
-@dataclass
+
+@dataclass(frozen=True)
 class Physics:
     VOLTAGE: int = 100
     CURRENT: int = 1000
@@ -57,7 +60,7 @@ class B1B2:
     };
     """
 
-    def __init__(self, in_bytearray=bytearray([0] * 2)):
+    def __init__(self, in_bytearray):
         super().__init__()
         m = 2
         if isinstance(in_bytearray, bytearray):
@@ -86,7 +89,7 @@ class B2B1:
     };
     """
 
-    def __init__(self, in_bytearray=bytearray([0] * 2)):
+    def __init__(self, in_bytearray):
         super().__init__()
         m = 2
         if isinstance(in_bytearray, bytearray):
@@ -116,7 +119,7 @@ class B1B3B2:
     };
     """
 
-    def __init__(self, in_bytearray=bytearray([0] * 3)):
+    def __init__(self, in_bytearray):
         super().__init__()
         m = 3
         if isinstance(in_bytearray, bytearray):
@@ -134,7 +137,7 @@ class B1B3B2:
         self.direct_reactive = 0
         self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[2], self.in_bytearray[1]]),
                                      byteorder='big', signed=False)
-        print(self.in_bytearray, self.volume)
+
 
 class B2B1B4B3:
     """
@@ -147,7 +150,7 @@ class B2B1B4B3:
     };
     """
 
-    def __init__(self, in_bytearray=bytearray([0] * 4)):
+    def __init__(self, in_bytearray):
         super().__init__()
         m = 4
         if isinstance(in_bytearray, bytearray):
@@ -179,7 +182,7 @@ class B1x2x6B3B2:
     };
     """
 
-    def __init__(self, in_bytearray=bytearray([0] * 3)):
+    def __init__(self, in_bytearray):
         super().__init__()
         m = 3
         if isinstance(in_bytearray, bytearray):
@@ -214,7 +217,7 @@ class B2B1x2x6B4B3:
     };
     """
 
-    def __init__(self, in_bytearray=bytearray([0] * 4)):
+    def __init__(self, in_bytearray):
         super().__init__()
         m = 4
         if isinstance(in_bytearray, bytearray):
@@ -236,7 +239,7 @@ class B2B1x2x6B4B3:
                                                 self.in_bytearray[2]]), byteorder='big', signed=False)
 
 
-def answer_081111h(in_bytearray=bytearray([0] * 3)):
+def answer_081111h(in_bytearray):
     """
     Прочитать напряжения по 1-ой фазе для счетчика с сетевым адресом 128 (используем запрос с номером 11h).
     Запрос: 80 08 11 11 (CRC)
@@ -250,27 +253,18 @@ def answer_081111h(in_bytearray=bytearray([0] * 3)):
     phase = dict()
     m = 3  # общая длина последовательности
     k = 3  # длина последовательности по каждой фазе
-    if isinstance(in_bytearray, bytearray):
-        n = len(in_bytearray)
-        if n < m:
-            trust_bytearray = in_bytearray[:]
-            for i in range(m - n):
-                trust_bytearray.append(0)
-        else:
-            trust_bytearray = in_bytearray[:m]
-    else:
-        trust_bytearray = bytearray([0] * m)
+    trust_bytearray = in_bytearray[:] if isinstance(in_bytearray, bytearray) and (
+                len(in_bytearray) == m) else bytearray([0] * m)
 
-    j = 0
     for i in range(0, m, k):
         power = B1B3B2(trust_bytearray[i:i + k])
-        phase[j] = (power.volume / Physics.VOLTAGE, 0, 0)
-        j += 1
+        phase[len(phase)] = RetAnswerFunctions(Volume=(power.volume / Physics.VOLTAGE),
+                                               DirectActive=0, DirectReactive=0)
 
     return phase
 
 
-def answer_081408h(in_bytearray=bytearray([0] * 16)):
+def answer_081408h(in_bytearray):
     """
     Прочитать мгновенную полную мощность по сумме фаз для счетчика с сетевым адресом 128 (используем запрос с номером 14h).
     Запрос: 80 08 14 08 (CRC)
@@ -283,36 +277,31 @@ def answer_081408h(in_bytearray=bytearray([0] * 16)):
     Значение полной мощности по сумме фаз:
     Значение 1-го байта = 40 = 01000000 - направление активной мощности – прямое, направление реактивной мощности – обратное.
     N = 0029E7h = 10727d S = 10727/100 = 107,27 Вт
-    N 1 = 0029E7h = 10727d S 1 = 10727/100 = 107,27 Втфаза 0 - сумма фаз
+    N1 = 0029E7h = 10727d S1 = 10727/100 = 107,27 Вт
+    фаза 0 - сумма фаз
     :param in_bytearray: возвращаемая при вызове запроса 0814h последовательность байт в виде байтмассива
-    :return: словарь с кортежем -  фаза: (направление активной мощности , направление реактивной мощности, величина)
+    :return: словарь с кортежем -  фаза: (величина, направление активной мощности , направление реактивной мощности)
     """
     phase = dict()
     m = 16  # общая длина последовательности
     k = 4  # длина последовательности по каждой фазе
-    if isinstance(in_bytearray, bytearray):
-        n = len(in_bytearray)
-        if n < m:
-            trust_bytearray = in_bytearray[:]
-            for i in range(m - n):
-                trust_bytearray.append(0)
-        else:
-            trust_bytearray = in_bytearray[:m]
-    else:
-        trust_bytearray = bytearray([0] * m)
+    trust_bytearray = in_bytearray[:] if isinstance(in_bytearray, bytearray) and (
+                len(in_bytearray) == m) else bytearray([0] * m)
 
-    j = 0
     for i in range(0, m, k):
         power = B2B1x2x6B4B3(trust_bytearray[i:i + k])
-        phase[j] = (power.volume / Physics.POWER, power.direct_active, power.direct_reactive)
-        j += 1
+        phase[len(phase)] = RetAnswerFunctions(Volume=(power.volume / Physics.POWER),
+                                               DirectActive=power.direct_active, DirectReactive=power.direct_reactive)
 
     return phase
 
 
 if __name__ == '__main__':
     print(answer_081111h(bytearray([0x00, 0x2D, 0x02])))
-    # must be {0: (5.57, 0, 0)}
+    # must be {0: RetAnswerFunctions(Volume=5.57, DirectActive=0, DirectReactive=0)}
     print(answer_081408h(bytearray([0x00, 0x40, 0xE7, 0x29, 0x00, 0x40, 0xE7, 0x29,
                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])))
-    # must be {0: (107.27, 1, -1), 1: (107.27, 1, -1), 2: (0.0, 1, 1), 3: (0.0, 1, 1)}
+    # must be {0: RetAnswerFunctions(Volume=107.27, DirectActive=1, DirectReactive=-1),
+    #          1: RetAnswerFunctions(Volume=107.27, DirectActive=1, DirectReactive=-1),
+    #          2: RetAnswerFunctions(Volume=0.0, DirectActive=1, DirectReactive=1),
+    #          3: RetAnswerFunctions(Volume=0.0, DirectActive=1, DirectReactive=1)}
