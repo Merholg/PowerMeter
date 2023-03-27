@@ -54,25 +54,25 @@ class ByteX2X6(ctypes.Union):
 
 class B1B2B3B4B5B6:
     """
-        //2.3.16 Чтение варианта исполнения. PRODUCTIONVAR
-        //Поле данных ответа состоит из 6 байт
-        struct PRODUCTIONVAR
+    //2.3.16 Чтение варианта исполнения. PRODUCTIONVAR
+    //Поле данных ответа состоит из 6 байт
+    struct PRODUCTIONVAR
     {
-    //---------------------------------
-    //---------------------------------
-    //---------------------------------
-    //---------------------------------
-    //---------------------------------
+        //---------------------------------
+        //---------------------------------
+        //---------------------------------
+        //---------------------------------
+        //---------------------------------
     };
     """
 
     class ByteB1X2222(ctypes.Union):
         class B1X2222(ctypes.BigEndianStructure):
             """
-            BYTE In:2;             // Iн : 0 - 5; 1 - 1; 2 - 10.
-    	    BYTE Un:2;             // Uн Uн - номинальное напряжение В: 0 - 57,7; 1 - 230.
-    	    BYTE ClR:2;            // Cl R класс точности по реактивной энергии %: 0 - 0,2; 1 - 0,5; 2 - 1,0; 3 - 2,0.
-    	    BYTE ClA:2;            // Cl А класс точности по активной энергии %: 0 - 0,2; 1 - 0,5; 2 - 1,0; 3 - 2,0.
+            BYTE In:2;  // Iн : 0 - 5; 1 - 1; 2 - 10.
+    	    BYTE Un:2;  // Uн Uн - номинальное напряжение В: 0 - 57,7; 1 - 230.
+    	    BYTE ClR:2; // Cl R класс точности по реактивной энергии %: 0 - 0,2; 1 - 0,5; 2 - 1,0; 3 - 2,0.
+    	    BYTE ClA:2; // Cl А класс точности по активной энергии %: 0 - 0,2; 1 - 0,5; 2 - 1,0; 3 - 2,0.
             """
             _pack_ = 1
             _fields_ = [
@@ -161,11 +161,11 @@ class B1B2B3B4B5B6:
     class ByteB5X11111111(ctypes.Union):
         class B5X11111111(ctypes.BigEndianStructure):
             """
-	        BYTE PhCalcPower:1;    // Пофазный учет энергии A+ 0 - нет, 1 - да
-	        BYTE QPower:1;         // Контроль ПКЭ 0 - нет, 1 - да
+    	    BYTE PhCalcPower:1;    // Пофазный учет энергии A+ 0 - нет, 1 - да
+    	    BYTE QPower:1;         // Контроль ПКЭ 0 - нет, 1 - да
 	        BYTE SupIF1:1;         // Встроенное питание интерфейса 1 0 - нет, 1 - да
 	        BYTE IFace2:1;         // Интерфейс 2 0 - нет, 1 - да
-	        BYTE CEPlomb:1;        // Флаг наличия эл. пломбы защитной крышки, 0 - нет, 1 - есть
+    	    BYTE CEPlomb:1;        // Флаг наличия эл. пломбы защитной крышки, 0 - нет, 1 - есть
 	        BYTE TarMax:1;         // Флаг потарифного учета максимумов мощности, 0 - нет, 1 - есть
 	        BYTE Light:1;          // Флаг наличия подсветки ЖКИ, 0 - нет, 1 - есть
 	        BYTE Relay:1;          // Флаг наличия встроенного реле, 0 - нет, 1 - есть
@@ -175,7 +175,7 @@ class B1B2B3B4B5B6:
                 ("PhCalcPower", c_uint8, 1),
                 ("QPower", c_uint8, 1),
                 ("SupIF1", c_uint8, 1),
-                ("IFace2", c_uint8, 1)
+                ("IFace2", c_uint8, 1),
                 ("CEPlomb", c_uint8, 1),
                 ("TarMax", c_uint8, 1),
                 ("Light", c_uint8, 1),
@@ -204,7 +204,7 @@ class B1B2B3B4B5B6:
                 ("ExControl", c_uint8, 1),
                 ("VoltTarif", c_uint8, 1),
                 ("BEPlomb", c_uint8, 1),
-                ("Profile2", c_uint8, 1)
+                ("Profile2", c_uint8, 1),
                 ("ModemPLC2", c_uint8, 1),
                 ("IEC61107", c_uint8, 1),
                 ("Reserved1", c_uint8, 1),
@@ -217,8 +217,8 @@ class B1B2B3B4B5B6:
         ]
 
     @dataclass(frozen=True)
-    class PRODUCTIONVAR:
-        ProdVar = {
+    class PVData:
+        D = {
             {'In': {'Descript': 'Iн - номинальный ток А', 'Volumes': {0: '5', 1: '1', 2: '10'}}},
             {'Un': {'Descript': 'Uн - номинальное напряжение В', 'Volumes': {0: '57,7', 1: '230'}}},
             {'ClR': {'Descript': 'Cl R класс точности по реактивной энергии %',
@@ -249,7 +249,8 @@ class B1B2B3B4B5B6:
             {'SupIF1': {'Descript': 'Встроенное питание интерфейса 1', 'Volumes': {0: 'нет', 1: 'да'}}},
             {'IFace2': {'Descript': 'Интерфейс 2', 'Volumes': {0: 'нет', 1: 'да'}}},
             {'CEPlomb': {'Descript': 'Флаг наличия эл. пломбы защитной крышки', 'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'TarMax': {'Descript': 'Флаг потарифного учета максимумов мощности', 'Volumes': {0: 'нет', 1: 'есть'}}},
+            {'TarMax': {'Descript': 'Флаг потарифного учета максимумов мощности',
+                        'Volumes': {0: 'нет', 1: 'есть'}}},
             {'Light': {'Descript': 'Флаг наличия подсветки ЖКИ', 'Volumes': {0: 'нет', 1: 'есть'}}},
             {'Relay': {'Descript': 'Флаг наличия встроенного реле', 'Volumes': {0: 'нет', 1: 'есть'}}},
             {'ExControl': {
@@ -264,6 +265,40 @@ class B1B2B3B4B5B6:
             {'Reserved1': {'Descript': 'Reserved1', 'Volumes': {0: 'нет'}}},
             {'Reserved2': {'Descript': 'Reserved2', 'Volumes': {0: 'нет'}}}
         }
+
+    def __init__(self, in_bytearray):
+        super().__init__()
+        m = 6
+        if isinstance(in_bytearray, bytearray):
+            n = len(in_bytearray)
+            if n < m:
+                self.in_bytearray = in_bytearray[:]
+                for i in range(m - n):
+                    self.in_bytearray.append(0)
+            else:
+                self.in_bytearray = in_bytearray[:m]
+        else:
+            self.in_bytearray = bytearray([0] * m)
+
+        self.byte_b1 = self.ByteB1X2222()
+        self.byte_b2 = self.ByteB2X41111()
+        self.byte_b3 = self.ByteB3X4211()
+        self.byte_b4 = self.ByteB4X1121111()
+        self.byte_b5 = self.ByteB5X11111111()
+        self.byte_b6 = self.ByteB6X11111111()
+
+        self.byte_b1.one_byte = self.in_bytearray[0]
+        self.byte_b2.one_byte = self.in_bytearray[1]
+        self.byte_b3.one_byte = self.in_bytearray[2]
+        self.byte_b4.one_byte = self.in_bytearray[3]
+        self.byte_b5.one_byte = self.in_bytearray[4]
+        self.byte_b6.one_byte = self.in_bytearray[5]
+
+        self.volume = int.from_bytes(self.byte_b1.b1x2222.In)
+        self.PVvar = self.PVData.D.get('In', {'Descript': 'Unknown', 'Volumes': {0: 'None'}})
+
+        # self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[1]]),
+        #                              byteorder='big', signed=False)
 
 
 class B1B2:
