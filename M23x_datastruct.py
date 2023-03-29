@@ -302,6 +302,7 @@ class B1B2B3B4B5B6:
         self.byte_b4.one_byte = self.in_bytearray[3]
         self.byte_b5.one_byte = self.in_bytearray[4]
         self.byte_b6.one_byte = self.in_bytearray[5]
+
         self.status_val = dict()
         self.status_val['In'] = self.byte_b1.b1x2222.In
         self.status_val['Un'] = self.byte_b1.b1x2222.Un
@@ -340,7 +341,7 @@ class B1B2B3B4B5B6:
         self.status_val['Reserved1'] = self.byte_b6.b6x11111111.Reserved1
         self.status_val['Reserved2'] = self.byte_b6.b6x11111111.Reserved2
         self.status_pair = list()
-        for key, volume in self.status_val:
+        for key, volume in self.status_val.items():
             self.status_pair.append(self.get_option_prodvar(key, int.from_bytes(self.status_val[key],
                                                                                 byteorder='big', signed=False)))
         # self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[1]]),
