@@ -296,16 +296,53 @@ class B1B2B3B4B5B6:
         self.byte_b4 = self.ByteB4X1121111()
         self.byte_b5 = self.ByteB5X11111111()
         self.byte_b6 = self.ByteB6X11111111()
-
         self.byte_b1.one_byte = self.in_bytearray[0]
         self.byte_b2.one_byte = self.in_bytearray[1]
         self.byte_b3.one_byte = self.in_bytearray[2]
         self.byte_b4.one_byte = self.in_bytearray[3]
         self.byte_b5.one_byte = self.in_bytearray[4]
         self.byte_b6.one_byte = self.in_bytearray[5]
-
-        self.volume = int.from_bytes(self.byte_b1.b1x2222.In)
-        self.status_pair = self.get_option_prodvar('In', self.volume)
+        self.status_val = dict()
+        self.status_val['In'] = self.byte_b1.b1x2222.In
+        self.status_val['Un'] = self.byte_b1.b1x2222.Un
+        self.status_val['ClR'] = self.byte_b1.b1x2222.ClR
+        self.status_val['ClA'] = self.byte_b1.b1x2222.ClA
+        self.status_val['MeterConst'] = self.byte_b2.b2x41111.MeterConst
+        self.status_val['NPhase'] = self.byte_b2.b2x41111.NPhase
+        self.status_val['ProfMPower'] = self.byte_b2.b2x41111.ProfMPower
+        self.status_val['TempRange'] = self.byte_b2.b2x41111.TempRange
+        self.status_val['NDirect'] = self.byte_b2.b2x41111.NDirect
+        self.status_val['NVarProd'] = self.byte_b3.b3x4211.NVarProd
+        self.status_val['MeterType'] = self.byte_b3.b3x4211.MeterType
+        self.status_val['Tarificator'] = self.byte_b3.b3x4211.Tarificator
+        self.status_val['SumPhase'] = self.byte_b3.b3x4211.SumPhase
+        self.status_val['EPlonb'] = self.byte_b4.b4x1121111.EPlonb
+        self.status_val['ExSupp'] = self.byte_b4.b4x1121111.ExSupp
+        self.status_val['IFace'] = self.byte_b4.b4x1121111.IFace
+        self.status_val['OPort'] = self.byte_b4.b4x1121111.OPort
+        self.status_val['ModemGSM'] = self.byte_b4.b4x1121111.ModemGSM
+        self.status_val['ModemPLM'] = self.byte_b4.b4x1121111.ModemPLM
+        self.status_val['Mem3'] = self.byte_b4.b4x1121111.Mem3
+        self.status_val['PhCalcPower'] = self.byte_b5.b5x11111111.PhCalcPower
+        self.status_val['QPower'] = self.byte_b5.b5x11111111.QPower
+        self.status_val['SupIF1'] = self.byte_b5.b5x11111111.SupIF1
+        self.status_val['IFace2'] = self.byte_b5.b5x11111111.IFace2
+        self.status_val['CEPlomb'] = self.byte_b5.b5x11111111.CEPlomb
+        self.status_val['TarMax'] = self.byte_b5.b5x11111111.TarMax
+        self.status_val['Light'] = self.byte_b5.b5x11111111.Light
+        self.status_val['Relay'] = self.byte_b5.b5x11111111.Relay
+        self.status_val['ExControl'] = self.byte_b6.b6x11111111.ExControl
+        self.status_val['VoltTarif'] = self.byte_b6.b6x11111111.VoltTarif
+        self.status_val['BEPlomb'] = self.byte_b6.b6x11111111.BEPlomb
+        self.status_val['Profile2'] = self.byte_b6.b6x11111111Profile2
+        self.status_val['ModemPLC2'] = self.byte_b6.b6x11111111.ModemPLC2
+        self.status_val['IEC61107'] = self.byte_b6.b6x11111111.IEC61107
+        self.status_val['Reserved1'] = self.byte_b6.b6x11111111.Reserved1
+        self.status_val['Reserved2'] = self.byte_b6.b6x11111111.Reserved2
+        self.status_pair = list()
+        for key, volume in self.status_val:
+            self.status_pair.append(self.get_option_prodvar(key, int.from_bytes(self.status_val[key],
+                                                                                byteorder='big', signed=False)))
         # self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[1]]),
         #                              byteorder='big', signed=False)
 
