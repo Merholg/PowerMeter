@@ -9,6 +9,7 @@ c_uint8 = ctypes.c_uint8
 c_uint32 = ctypes.c_uint32
 
 RetAnswerFunctions = namedtuple('RetAnswerFunctions', 'Volume DirectActive DirectReactive')
+StatusVar = namedtuple('StatusVar', 'Descript Volumes')
 
 
 @dataclass(frozen=True)
@@ -216,55 +217,64 @@ class B1B2B3B4B5B6:
             ("one_byte", c_uint8)
         ]
 
-    @dataclass(frozen=True)
-    class PVData:
-        D = {
-            {'In': {'Descript': 'Iн - номинальный ток А', 'Volumes': {0: '5', 1: '1', 2: '10'}}},
-            {'Un': {'Descript': 'Uн - номинальное напряжение В', 'Volumes': {0: '57,7', 1: '230'}}},
-            {'ClR': {'Descript': 'Cl R класс точности по реактивной энергии %',
-                     'Volumes': {0: '0,2', 1: '0,5', 2: '1,0', 3: '2,0'}}},
-            {'ClA': {'Descript': 'Cl А класс точности по активной энергии %',
-                     'Volumes': {0: '0,2', 1: '0,5', 2: '1,0', 3: '2,0'}}},
-            {'MeterConst': {'Descript': 'Постоянная счетчика имп/квт?ч',
-                            'Volumes': {0: '5000', 1: '25000', 2: '1250', 3: '500', 4: '1000', 5: '250'}}},
-            {'NPhase': {'Descript': 'Число фаз', 'Volumes': {0: '3', 1: '1'}}},
-            {'ProfMPower': {'Descript': 'Учет профиля средних мощностей', 'Volumes': {0: 'нет', 1: 'да'}}},
-            {'TempRange': {'Descript': 'Температурный диапазон°C', 'Volumes': {0: '20', 1: '40'}}},
-            {'NDirect': {'Descript': 'Число направлений', 'Volumes': {0: '2', 1: '1'}}},
-            {'NVarProd': {'Descript': 'No варианта исполнения',
-                          'Volumes': {1: '57,7В(1)5А10А5000имп./кВт*ч', 2: '230В5А60А500имп./кВт*ч',
-                                      3: '230В5А100А250имп./кВт*ч', 4: '230В(1)5А10А1000имп./кВт*ч'}}},
-            {'MeterType': {'Descript': 'Тип счетчика', 'Volumes': {0: 'AR', 1: 'A'}}},
-            {'Tarificator': {'Descript': 'Тарификатор', 'Volumes': {0: 'внешний', 1: 'внутренний'}}},
-            {'SumPhase': {'Descript': 'Суммирование фаз', 'Volumes': {0: 'с учетом знака', 1: 'по модулю'}}},
-            {'EPlomb': {'Descript': 'Эл. помба верхней крышки', 'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'ExSupp': {'Descript': 'Внешнее питание', 'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'IFace': {'Descript': 'Интерфейс', 'Volumes': {0: 'CAN', 1: 'RS-485', 2: 'резерв', 3: 'нет'}}},
-            {'OPort': {'Descript': 'оптопорт', 'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'ModemGSM': {'Descript': 'Модем GSM', 'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'ModemPLM': {'Descript': 'Модем PLM', 'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'Mem3': {'Descript': 'Память No3', 'Volumes': {0: '65.5x8', 1: '131x8'}}},
-            {'PhCalcPower': {'Descript': 'Пофазный учет энергии A+', 'Volumes': {0: 'нет', 1: 'да'}}},
-            {'QPower': {'Descript': 'Контроль ПКЭ', 'Volumes': {0: 'нет', 1: 'да'}}},
-            {'SupIF1': {'Descript': 'Встроенное питание интерфейса 1', 'Volumes': {0: 'нет', 1: 'да'}}},
-            {'IFace2': {'Descript': 'Интерфейс 2', 'Volumes': {0: 'нет', 1: 'да'}}},
-            {'CEPlomb': {'Descript': 'Флаг наличия эл. пломбы защитной крышки', 'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'TarMax': {'Descript': 'Флаг потарифного учета максимумов мощности',
-                        'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'Light': {'Descript': 'Флаг наличия подсветки ЖКИ', 'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'Relay': {'Descript': 'Флаг наличия встроенного реле', 'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'ExControl': {
-                'Descript': 'Флаг наличия аппаратных средств управления внешними устройствами отключения нагрузки',
-                'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'VoltTarif': {'Descript': 'Флаг переключения тарифов внешним напряжением',
-                           'Volumes': {0: 'нет', 1: 'да'}}},
-            {'BEPlomb': {'Descript': 'Флаг наличия эл.пломбы модульного отсека', 'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'Profile2': {'Descript': 'Флаг наличия профиля 2', 'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'ModemPLC2': {'Descript': 'Модем PLC2', 'Volumes': {0: 'нет', 1: 'есть'}}},
-            {'IEC61107': {'Descript': 'Флаг протокола IEC61107', 'Volumes': {0: 'нет', 1: 'да'}}},
-            {'Reserved1': {'Descript': 'Reserved1', 'Volumes': {0: 'нет'}}},
-            {'Reserved2': {'Descript': 'Reserved2', 'Volumes': {0: 'нет'}}}
-        }
+    @staticmethod
+    def get_option_prodvar(indexvar, volumevar):
+        @dataclass(frozen=True)
+        class PVData:
+            D = {
+                'In': StatusVar(Descript='Iн - номинальный ток А', Volumes={0: '5', 1: '1', 2: '10'}),
+                'Un': StatusVar(Descript='Uн - номинальное напряжение В', Volumes={0: '57,7', 1: '230'}),
+                'ClR': StatusVar(Descript='Cl R класс точности по реактивной энергии %',
+                                 Volumes={0: '0,2', 1: '0,5', 2: '1,0', 3: '2,0'}),
+                'ClA': StatusVar(Descript='Cl А класс точности по активной энергии %',
+                                 Volumes={0: '0,2', 1: '0,5', 2: '1,0', 3: '2,0'}),
+                'MeterConst': StatusVar(Descript='Постоянная счетчика имп/квт?ч',
+                                        Volumes={0: '5000', 1: '25000', 2: '1250', 3: '500', 4: '1000', 5: '250'}),
+                'NPhase': StatusVar(Descript='Число фаз', Volumes={0: '3', 1: '1'}),
+                'ProfMPower': StatusVar(Descript='Учет профиля средних мощностей', Volumes={0: 'нет', 1: 'да'}),
+                'TempRange': StatusVar(Descript='Температурный диапазон°C', Volumes={0: '20', 1: '40'}),
+                'NDirect': StatusVar(Descript='Число направлений', Volumes={0: '2', 1: '1'}),
+                'NVarProd': StatusVar(Descript='No варианта исполнения',
+                                      Volumes={1: '57,7В(1)5А10А5000имп./кВт*ч', 2: '230В5А60А500имп./кВт*ч',
+                                               3: '230В5А100А250имп./кВт*ч', 4: '230В(1)5А10А1000имп./кВт*ч'}),
+                'MeterType': StatusVar(Descript='Тип счетчика', Volumes={0: 'AR', 1: 'A'}),
+                'Tarificator': StatusVar(Descript='Тарификатор', Volumes={0: 'внешний', 1: 'внутренний'}),
+                'SumPhase': StatusVar(Descript='Суммирование фаз', Volumes={0: 'с учетом знака', 1: 'по модулю'}),
+                'EPlomb': StatusVar(Descript='Эл. помба верхней крышки', Volumes={0: 'нет', 1: 'есть'}),
+                'ExSupp': StatusVar(Descript='Внешнее питание', Volumes={0: 'нет', 1: 'есть'}),
+                'IFace': StatusVar(Descript='Интерфейс', Volumes={0: 'CAN', 1: 'RS-485', 2: 'резерв', 3: 'нет'}),
+                'OPort': StatusVar(Descript='оптопорт', Volumes={0: 'нет', 1: 'есть'}),
+                'ModemGSM': StatusVar(Descript='Модем GSM', Volumes={0: 'нет', 1: 'есть'}),
+                'ModemPLM': StatusVar(Descript='Модем PLM', Volumes={0: 'нет', 1: 'есть'}),
+                'Mem3': StatusVar(Descript='Память No3', Volumes={0: '65.5x8', 1: '131x8'}),
+                'PhCalcPower': StatusVar(Descript='Пофазный учет энергии A+', Volumes={0: 'нет', 1: 'да'}),
+                'QPower': StatusVar(Descript='Контроль ПКЭ', Volumes={0: 'нет', 1: 'да'}),
+                'SupIF1': StatusVar(Descript='Встроенное питание интерфейса 1', Volumes={0: 'нет', 1: 'да'}),
+                'IFace2': StatusVar(Descript='Интерфейс 2', Volumes={0: 'нет', 1: 'да'}),
+                'CEPlomb': StatusVar(Descript='Флаг наличия эл. пломбы защитной крышки',
+                                     Volumes={0: 'нет', 1: 'есть'}),
+                'TarMax': StatusVar(Descript='Флаг потарифного учета максимумов мощности',
+                                    Volumes={0: 'нет', 1: 'есть'}),
+                'Light': StatusVar(Descript='Флаг наличия подсветки ЖКИ', Volumes={0: 'нет', 1: 'есть'}),
+                'Relay': StatusVar(Descript='Флаг наличия встроенного реле', Volumes={0: 'нет', 1: 'есть'}),
+                'ExControl':
+                    StatusVar(
+                        Descript='Флаг наличия аппаратных средств управления внешними устройствами отключения нагрузки',
+                        Volumes={0: 'нет', 1: 'есть'}),
+                'VoltTarif': StatusVar(Descript='Флаг переключения тарифов внешним напряжением',
+                                       Volumes={0: 'нет', 1: 'да'}),
+                'BEPlomb': StatusVar(Descript='Флаг наличия эл.пломбы модульного отсека',
+                                     Volumes={0: 'нет', 1: 'есть'}),
+                'Profile2': StatusVar(Descript='Флаг наличия профиля 2', Volumes={0: 'нет', 1: 'есть'}),
+                'ModemPLC2': StatusVar(Descript='Модем PLC2', Volumes={0: 'нет', 1: 'есть'}),
+                'IEC61107': StatusVar(Descript='Флаг протокола IEC61107', Volumes={0: 'нет', 1: 'да'}),
+                'Reserved1': StatusVar(Descript='Reserved1', Volumes={0: 'нет'}),
+                'Reserved2': StatusVar(Descript='Reserved2', Volumes={0: 'нет'})
+            }
+
+        status_var = PVData.D[indexvar] if indexvar in PVData.D else StatusVar(Descript='undefined', Volumes={0: 'нет'})
+        status_vol = status_var.Volumes[volumevar] if volumevar in status_var.Volumes else 'none'
+        return status_var.Descript, status_vol
 
     def __init__(self, in_bytearray):
         super().__init__()
@@ -295,8 +305,7 @@ class B1B2B3B4B5B6:
         self.byte_b6.one_byte = self.in_bytearray[5]
 
         self.volume = int.from_bytes(self.byte_b1.b1x2222.In)
-        self.PVvar = self.PVData.D.get('In', {'Descript': 'Unknown', 'Volumes': {0: 'None'}})
-
+        self.status_pair = self.get_option_prodvar('In', self.volume)
         # self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[1]]),
         #                              byteorder='big', signed=False)
 
