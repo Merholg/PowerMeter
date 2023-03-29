@@ -128,7 +128,7 @@ class B1B2B3B4B5B6:
             ]
 
         _fields_ = [
-            ("x2x2x2x2", B3X4211),
+            ("b3x4211", B3X4211),
             ("one_byte", c_uint8)
         ]
 
@@ -335,15 +335,16 @@ class B1B2B3B4B5B6:
         self.status_val['ExControl'] = self.byte_b6.b6x11111111.ExControl
         self.status_val['VoltTarif'] = self.byte_b6.b6x11111111.VoltTarif
         self.status_val['BEPlomb'] = self.byte_b6.b6x11111111.BEPlomb
-        self.status_val['Profile2'] = self.byte_b6.b6x11111111Profile2
+        self.status_val['Profile2'] = self.byte_b6.b6x11111111.Profile2
         self.status_val['ModemPLC2'] = self.byte_b6.b6x11111111.ModemPLC2
         self.status_val['IEC61107'] = self.byte_b6.b6x11111111.IEC61107
         self.status_val['Reserved1'] = self.byte_b6.b6x11111111.Reserved1
         self.status_val['Reserved2'] = self.byte_b6.b6x11111111.Reserved2
         self.status_pair = list()
         for key, volume in self.status_val.items():
-            self.status_pair.append(self.get_option_prodvar(key, int.from_bytes(self.status_val[key],
-                                                                                byteorder='big', signed=False)))
+            self.status_pair.append(self.status_val[key])
+            # self.status_pair.append(self.get_option_prodvar(key, int.from_bytes(self.status_val[key],
+            #                                                                    byteorder='big', signed=False)))
         # self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[1]]),
         #                              byteorder='big', signed=False)
 
@@ -593,6 +594,22 @@ def answer_081408h(in_bytearray):
     return phase
 
 
+def answer_0812h(in_bytearray):
+    """
+    2.3.16 Чтение варианта исполнения. PRODUCTIONVAR
+    Поле данных ответа состоит из 6 байт
+
+    :param in_bytearray:
+    :return:
+    """
+    m = 6  # общая длина последовательности
+    trust_bytearray = in_bytearray[:] if isinstance(in_bytearray, bytearray) and (
+            len(in_bytearray) == m) else bytearray([0] * m)
+    status_word = B1B2B3B4B5B6(trust_bytearray)
+
+    return status_word.status_pair
+
+
 if __name__ == '__main__':
     print(answer_081111h(bytearray([0x00, 0x2D, 0x02])))
     # must be {0: RetAnswerFunctions(Volume=5.57, DirectActive=0, DirectReactive=0)}
@@ -602,3 +619,5 @@ if __name__ == '__main__':
     #          1: RetAnswerFunctions(Volume=107.27, DirectActive=1, DirectReactive=-1),
     #          2: RetAnswerFunctions(Volume=0.0, DirectActive=1, DirectReactive=1),
     #          3: RetAnswerFunctions(Volume=0.0, DirectActive=1, DirectReactive=1)}
+
+    print(answer_0812h(bytearray([0xB4, 0xE4, 0xC2, 0x96, 0x03, 0x00])))
