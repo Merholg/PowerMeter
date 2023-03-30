@@ -55,16 +55,49 @@ class ByteX2X6(ctypes.Union):
 
 class B1B2B3B4B5B6:
     """
-    //2.3.16 Чтение варианта исполнения. PRODUCTIONVAR
-    //Поле данных ответа состоит из 6 байт
-    struct PRODUCTIONVAR
-    {
-        //---------------------------------
-        //---------------------------------
-        //---------------------------------
-        //---------------------------------
-        //---------------------------------
-    };
+    2.3.16 Чтение варианта исполнения.
+    Поле данных ответа состоит из 6 байт: B4 E4 C2 96 03 00
+
+    10110100:
+    С1 A – 1,0%;	2	10
+    С1 R – 2,0%;	3	11
+    Uн = – 230В;	1	01
+    Iн = – 5А.;	0	00
+
+    11100100:
+    число направлений – 1;			1	1
+    температурный диапазон - 1-40°C;	1	1
+    учёт профиля средних мощностей – да;	1	1
+    число фаз - 3;				0	0
+    постоянная счётчика – 1000 имп/квт⋅ч.	4	0100
+
+    11000010:
+    суммирование фаз – по модулю;
+    тарификатор – внутренний;
+    тип счётчика – AR (измерение активной и реактивной энергии);
+    № варианта исполнения – 2.
+
+    10010110:
+    Память №3 – 131x8;
+    модем PLM – нет;
+    модем GSM – нет;
+    оптопорт – есть;
+    интерфейс – CAN;
+    внешнее питание – есть;
+    эл. пломба внешней крышки – нет.
+
+    00000011:
+    флаг наличия встроенного реле – нет;
+    флаг наличия подсветки ЖКИ – нет;
+    флаг потарифного учёта максимумов мощности – нет;
+    флаг наличия эл. пломбы защитной крышки – нет;
+    интерфейс 2 – нет;
+    встроенное питание интерфейса 1 – нет;
+    контроль ПКЭ – да;
+    пофазный учёт энергии A+ - да.
+
+    00000000:
+
     """
 
     class ByteB1X2222(ctypes.Union):
@@ -77,10 +110,10 @@ class B1B2B3B4B5B6:
             """
             _pack_ = 1
             _fields_ = [
-                ("In", c_uint8, 2),
-                ("Un", c_uint8, 2),
+                ("ClA", c_uint8, 2),
                 ("ClR", c_uint8, 2),
-                ("ClA", c_uint8, 2)
+                ("Un", c_uint8, 2),
+                ("In", c_uint8, 2)
             ]
 
         _fields_ = [
@@ -99,11 +132,11 @@ class B1B2B3B4B5B6:
             """
             _pack_ = 1
             _fields_ = [
-                ("MeterConst", c_uint8, 4),
-                ("NPhase", c_uint8, 1),
-                ("ProfMPower", c_uint8, 1),
+                ("NDirect", c_uint8, 1),
                 ("TempRange", c_uint8, 1),
-                ("NDirect", c_uint8, 1)
+                ("ProfMPower", c_uint8, 1),
+                ("NPhase", c_uint8, 1),
+                ("MeterConst", c_uint8, 4)
             ]
 
         _fields_ = [
@@ -121,10 +154,10 @@ class B1B2B3B4B5B6:
             """
             _pack_ = 1
             _fields_ = [
-                ("NVarProd", c_uint8, 4),
-                ("MeterType", c_uint8, 2),
+                ("SumPhase", c_uint8, 1),
                 ("Tarificator", c_uint8, 1),
-                ("SumPhase", c_uint8, 1)
+                ("MeterType", c_uint8, 2),
+                ("NVarProd", c_uint8, 4)
             ]
 
         _fields_ = [
@@ -145,13 +178,13 @@ class B1B2B3B4B5B6:
             """
             _pack_ = 1
             _fields_ = [
-                ("EPlonb", c_uint8, 1),
-                ("ExSupp", c_uint8, 1),
-                ("IFace", c_uint8, 2),
-                ("OPort", c_uint8, 1),
-                ("ModemGSM", c_uint8, 1),
+                ("Mem3", c_uint8, 1),
                 ("ModemPLM", c_uint8, 1),
-                ("Mem3", c_uint8, 1)
+                ("ModemGSM", c_uint8, 1),
+                ("OPort", c_uint8, 1),
+                ("IFace", c_uint8, 2),
+                ("ExSupp", c_uint8, 1),
+                ("EPlomb", c_uint8, 1)
             ]
 
         _fields_ = [
@@ -173,14 +206,14 @@ class B1B2B3B4B5B6:
             """
             _pack_ = 1
             _fields_ = [
-                ("PhCalcPower", c_uint8, 1),
-                ("QPower", c_uint8, 1),
-                ("SupIF1", c_uint8, 1),
-                ("IFace2", c_uint8, 1),
-                ("CEPlomb", c_uint8, 1),
-                ("TarMax", c_uint8, 1),
+                ("Relay", c_uint8, 1),
                 ("Light", c_uint8, 1),
-                ("Relay", c_uint8, 1)
+                ("TarMax", c_uint8, 1),
+                ("CEPlomb", c_uint8, 1),
+                ("IFace2", c_uint8, 1),
+                ("SupIF1", c_uint8, 1),
+                ("QPower", c_uint8, 1),
+                ("PhCalcPower", c_uint8, 1)
             ]
 
         _fields_ = [
@@ -202,14 +235,14 @@ class B1B2B3B4B5B6:
             """
             _pack_ = 1
             _fields_ = [
-                ("ExControl", c_uint8, 1),
-                ("VoltTarif", c_uint8, 1),
-                ("BEPlomb", c_uint8, 1),
-                ("Profile2", c_uint8, 1),
-                ("ModemPLC2", c_uint8, 1),
-                ("IEC61107", c_uint8, 1),
+                ("Reserved2", c_uint8, 1),
                 ("Reserved1", c_uint8, 1),
-                ("Reserved2", c_uint8, 1)
+                ("IEC61107", c_uint8, 1),
+                ("ModemPLC2", c_uint8, 1),
+                ("Profile2", c_uint8, 1),
+                ("BEPlomb", c_uint8, 1),
+                ("VoltTarif", c_uint8, 1),
+                ("ExControl", c_uint8, 1)
             ]
 
         _fields_ = [
@@ -317,7 +350,7 @@ class B1B2B3B4B5B6:
         self.status_val['MeterType'] = self.byte_b3.b3x4211.MeterType
         self.status_val['Tarificator'] = self.byte_b3.b3x4211.Tarificator
         self.status_val['SumPhase'] = self.byte_b3.b3x4211.SumPhase
-        self.status_val['EPlonb'] = self.byte_b4.b4x1121111.EPlonb
+        self.status_val['EPlomb'] = self.byte_b4.b4x1121111.EPlomb
         self.status_val['ExSupp'] = self.byte_b4.b4x1121111.ExSupp
         self.status_val['IFace'] = self.byte_b4.b4x1121111.IFace
         self.status_val['OPort'] = self.byte_b4.b4x1121111.OPort
@@ -342,11 +375,10 @@ class B1B2B3B4B5B6:
         self.status_val['Reserved2'] = self.byte_b6.b6x11111111.Reserved2
         self.status_pair = list()
         for key, volume in self.status_val.items():
-            self.status_pair.append(self.status_val[key])
+            # self.status_pair.append(self.status_val[key])
             # self.status_pair.append(self.get_option_prodvar(key, int.from_bytes(self.status_val[key],
-            #                                                                    byteorder='big', signed=False)))
-        # self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[1]]),
-        #                              byteorder='big', signed=False)
+            #                                                                     byteorder='big', signed=False)))
+            self.status_pair.append(self.get_option_prodvar(key, self.status_val[key]))
 
 
 class B1B2:
@@ -621,3 +653,39 @@ if __name__ == '__main__':
     #          3: RetAnswerFunctions(Volume=0.0, DirectActive=1, DirectReactive=1)}
 
     print(answer_0812h(bytearray([0xB4, 0xE4, 0xC2, 0x96, 0x03, 0x00])))
+    # must be [('Iн - номинальный ток А', '5'),
+    #          ('Uн - номинальное напряжение В', '230'),
+    #          ('Cl R класс точности по реактивной энергии %', '2,0'),
+    #          ('Cl А класс точности по активной энергии %', '1,0'),
+    #          ('Постоянная счетчика имп/квт?ч', '1000'),
+    #          ('Число фаз', '3'),
+    #          ('Учет профиля средних мощностей', 'да'),
+    #          ('Температурный диапазон°C', '40'),
+    #          ('Число направлений', '1'),
+    #          ('No варианта исполнения', '230В5А60А500имп./кВт*ч'),
+    #          ('Тип счетчика', 'AR'),
+    #          ('Тарификатор', 'внутренний'),
+    #          ('Суммирование фаз', 'по модулю'),
+    #          ('Эл. помба верхней крышки', 'нет'),
+    #          ('Внешнее питание', 'есть'),
+    #          ('Интерфейс', 'RS-485'),
+    #          ('оптопорт', 'есть'),
+    #          ('Модем GSM', 'нет'),
+    #          ('Модем PLM', 'нет'),
+    #          ('Память No3', '131x8'),
+    #          ('Пофазный учет энергии A+', 'да'),
+    #          ('Контроль ПКЭ', 'да'),
+    #          ('Встроенное питание интерфейса 1', 'нет'),
+    #          ('Интерфейс 2', 'нет'),
+    #          ('Флаг наличия эл. пломбы защитной крышки', 'нет'),
+    #          ('Флаг потарифного учета максимумов мощности', 'нет'),
+    #          ('Флаг наличия подсветки ЖКИ', 'нет'),
+    #          ('Флаг наличия встроенного реле', 'нет'),
+    #          ('Флаг наличия аппаратных средств управления внешними устройствами отключения нагрузки', 'нет'),
+    #          ('Флаг переключения тарифов внешним напряжением', 'нет'),
+    #          ('Флаг наличия эл.пломбы модульного отсека', 'нет'),
+    #          ('Флаг наличия профиля 2', 'нет'),
+    #          ('Модем PLC2', 'нет'),
+    #          ('Флаг протокола IEC61107', 'нет'),
+    #          ('Reserved1', 'нет'),
+    #          ('Reserved2', 'нет')]
