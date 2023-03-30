@@ -53,6 +53,181 @@ class ByteX2X6(ctypes.Union):
     ]
 
 
+class B5B6B3B4B1B2:
+    """
+    2.3.11 Чтение байт состояния.
+    Команда предназначена для чтения слова состояния счетчика.
+    Код параметра – 0Ah.
+    Поле параметров отсутствует.
+    Поле данных ответа состоит из 6 байт. Информация в слове состояния содержится в пози-
+    ционном коде и, в основном, определяет наличие аппаратных или логических внутренних оши-
+    бок счетчика. Структура слова состояния счетчиков приведена в Приложении А - Самодиагно-
+    стика счётчика.
+    Пример:
+    Прочитать слово состояния счетчика с сетевым адресом 128.
+    Запрос: 80 08 0A (CRC)
+    Ответ: 80 00 00 00 00 04 00 (CRC)
+    Ошибка «E-03» – нарушено функционирование UART1
+    """
+
+    class ByteX11111111(ctypes.Union):
+        class X11111111(ctypes.BigEndianStructure):
+            """
+
+            """
+            _pack_ = 1
+            _fields_ = [
+                ("BIT8", c_uint8, 1),
+                ("BIT7", c_uint8, 1),
+                ("BIT6", c_uint8, 1),
+                ("BIT5", c_uint8, 1),
+                ("BIT4", c_uint8, 1),
+                ("BIT3", c_uint8, 1),
+                ("BIT2", c_uint8, 1),
+                ("BIT1", c_uint8, 1)
+            ]
+
+        _fields_ = [
+            ("x11111111", X11111111),
+            ("one_byte", c_uint8)
+        ]
+
+    @dataclass(frozen=True)
+    class SWData:
+        D = {
+            "E01": "Напряжение батарейки ниже 2.2(В)",
+            "E02": "Нарушено функционирование памяти2",
+            "E03": "Нарушено функционирование UART",
+            "E04": "Нарушено функционирование ADS",
+            "E05": "Ошибка обмена с памятью1",
+            "E06": "Неисправность часов",
+            "E07": "Нарушено функционирование памяти3",
+            "E08": "",
+            "E09": "Ошибка КС ПО",
+            "E10": "Ошибка калибровочных коэффициентов",
+            "E11": "Ошибка регистров накопленной энергии",
+            "E12": "Ошибка сетевого адреса",
+            "E13": "Ошибка серийного номера",
+            "E14": "Поврежден пароль",
+            "E15": "Ошибка массива вариантов исполнения",
+            "E16": "Поврежден флаг тарификатора",
+            "E17": "Поврежден флаг отключения нагрузки",
+            "E18": "Ошибка лимита мощности",
+            "E19": "Ошибка лимита энергии",
+            "E20": "Нарушение параметров UART",
+            "E21": "Ошибка параметров индикации по тарифам",
+            "E22": "Ошибка параметров индикации по периодам",
+            "E23": "Повреждение множителя таймаута",
+            "E24": "Поврежден байт программируемых флагов",
+            "E25": "Повреждено расписание праздничных дней",
+            "E26": "Повреждено тарифное расписание",
+            "E27": "Поврежден массив таймера",
+            "E28": "Ошибка сезонных переходов",
+            "E29": "Ошибка местоположения прибора",
+            "E30": "Повреждены коэффициенты трансформации",
+            "E31": "Повреждены регистры накопления",
+            "E32": "Ошибка параметров среза",
+            "E33": "Повреждены регистры среза",
+            "E34": "Ошибка указателей журнала событий",
+            "E35": "Ошибка записи журнала событий",
+            "E36": "Повреждение регистра учета технических потерь",
+            "E37": "Ошибка мощностей технических потерь",
+            "E38": "Ошибка регистров накопленной энергии потерь",
+            "E39": "Повреждены регистры пофазного учета",
+            "E40": "Флаг поступления широковещ. сообщения",
+            "E41": "Повреждение указателей журнала ПКЭ",
+            "E42": "Ошибка записи журнала ПКЭ",
+            "E43": "",
+            "E44": "",
+            "E45": "",
+            "E46": "",
+            "E47": "Выполнение процедуры коррекции времени",
+            "E48": "Напряжение батарейки ниже 2.65(В)"
+        }
+
+    def __init__(self, in_bytearray):
+        super().__init__()
+        m = 6
+        if isinstance(in_bytearray, bytearray):
+            n = len(in_bytearray)
+            if n < m:
+                self.in_bytearray = in_bytearray[:]
+                for i in range(m - n):
+                    self.in_bytearray.append(0)
+            else:
+                self.in_bytearray = in_bytearray[:m]
+        else:
+            self.in_bytearray = bytearray([0] * m)
+
+        self.byte_b1 = self.ByteX11111111()
+        self.byte_b2 = self.ByteX11111111()
+        self.byte_b3 = self.ByteX11111111()
+        self.byte_b4 = self.ByteX11111111()
+        self.byte_b5 = self.ByteX11111111()
+        self.byte_b6 = self.ByteX11111111()
+        self.byte_b1.one_byte = self.in_bytearray[4]
+        self.byte_b2.one_byte = self.in_bytearray[5]
+        self.byte_b3.one_byte = self.in_bytearray[2]
+        self.byte_b4.one_byte = self.in_bytearray[3]
+        self.byte_b5.one_byte = self.in_bytearray[0]
+        self.byte_b6.one_byte = self.in_bytearray[1]
+
+        self.status_val = dict()
+        self.status_val['E01'] = self.byte_b1.x11111111.BIT1
+        self.status_val['E02'] = self.byte_b1.x11111111.BIT2
+        self.status_val['E03'] = self.byte_b1.x11111111.BIT3
+        self.status_val['E04'] = self.byte_b1.x11111111.BIT4
+        self.status_val['E05'] = self.byte_b1.x11111111.BIT5
+        self.status_val['E06'] = self.byte_b1.x11111111.BIT6
+        self.status_val['E07'] = self.byte_b1.x11111111.BIT7
+        self.status_val['E08'] = self.byte_b1.x11111111.BIT8
+        self.status_val['E09'] = self.byte_b2.x11111111.BIT1
+        self.status_val['E10'] = self.byte_b2.x11111111.BIT2
+        self.status_val['E11'] = self.byte_b2.x11111111.BIT3
+        self.status_val['E12'] = self.byte_b2.x11111111.BIT4
+        self.status_val['E13'] = self.byte_b2.x11111111.BIT5
+        self.status_val['E14'] = self.byte_b2.x11111111.BIT6
+        self.status_val['E15'] = self.byte_b2.x11111111.BIT7
+        self.status_val['E16'] = self.byte_b2.x11111111.BIT8
+        self.status_val['E17'] = self.byte_b3.x11111111.BIT1
+        self.status_val['E18'] = self.byte_b3.x11111111.BIT2
+        self.status_val['E19'] = self.byte_b3.x11111111.BIT3
+        self.status_val['E20'] = self.byte_b3.x11111111.BIT4
+        self.status_val['E21'] = self.byte_b3.x11111111.BIT5
+        self.status_val['E22'] = self.byte_b3.x11111111.BIT6
+        self.status_val['E23'] = self.byte_b3.x11111111.BIT7
+        self.status_val['E24'] = self.byte_b3.x11111111.BIT8
+        self.status_val['E25'] = self.byte_b4.x11111111.BIT1
+        self.status_val['E26'] = self.byte_b4.x11111111.BIT2
+        self.status_val['E27'] = self.byte_b4.x11111111.BIT3
+        self.status_val['E28'] = self.byte_b4.x11111111.BIT4
+        self.status_val['E29'] = self.byte_b4.x11111111.BIT5
+        self.status_val['E30'] = self.byte_b4.x11111111.BIT6
+        self.status_val['E31'] = self.byte_b4.x11111111.BIT7
+        self.status_val['E32'] = self.byte_b4.x11111111.BIT8
+        self.status_val['E33'] = self.byte_b5.x11111111.BIT1
+        self.status_val['E34'] = self.byte_b5.x11111111.BIT2
+        self.status_val['E35'] = self.byte_b5.x11111111.BIT3
+        self.status_val['E36'] = self.byte_b5.x11111111.BIT4
+        self.status_val['E37'] = self.byte_b5.x11111111.BIT5
+        self.status_val['E38'] = self.byte_b5.x11111111.BIT6
+        self.status_val['E39'] = self.byte_b5.x11111111.BIT7
+        self.status_val['E40'] = self.byte_b5.x11111111.BIT8
+        self.status_val['E41'] = self.byte_b6.x11111111.BIT1
+        self.status_val['E42'] = self.byte_b6.x11111111.BIT2
+        self.status_val['E43'] = self.byte_b6.x11111111.BIT3
+        self.status_val['E44'] = self.byte_b6.x11111111.BIT4
+        self.status_val['E45'] = self.byte_b6.x11111111.BIT5
+        self.status_val['E46'] = self.byte_b6.x11111111.BIT6
+        self.status_val['E47'] = self.byte_b6.x11111111.BIT7
+        self.status_val['E48'] = self.byte_b6.x11111111.BIT8
+
+        self.status_pair = list()
+        for key, volume in self.status_val.items():
+            if volume > 0:
+                self.status_pair.append((key, self.SWData.D[key] if key in self.SWData.D else 'undefined'))
+
+
 class B1B2B3B4B5B6:
     """
     2.3.16 Чтение варианта исполнения.
@@ -375,10 +550,7 @@ class B1B2B3B4B5B6:
         self.status_val['Reserved2'] = self.byte_b6.b6x11111111.Reserved2
         self.status_pair = list()
         for key, volume in self.status_val.items():
-            # self.status_pair.append(self.status_val[key])
-            # self.status_pair.append(self.get_option_prodvar(key, int.from_bytes(self.status_val[key],
-            #                                                                     byteorder='big', signed=False)))
-            self.status_pair.append(self.get_option_prodvar(key, self.status_val[key]))
+            self.status_pair.append(self.get_option_prodvar(key, volume))
 
 
 class B1B2:
@@ -626,6 +798,22 @@ def answer_081408h(in_bytearray):
     return phase
 
 
+def answer_080Ah(in_bytearray):
+    """
+    2.3.11 Чтение байт состояния.
+    Поле данных ответа состоит из 6 байт
+
+    :param in_bytearray:
+    :return:
+    """
+    m = 6  # общая длина последовательности
+    trust_bytearray = in_bytearray[:] if isinstance(in_bytearray, bytearray) and (
+            len(in_bytearray) == m) else bytearray([0] * m)
+    status_word = B5B6B3B4B1B2(trust_bytearray)
+
+    return status_word.status_pair
+
+
 def answer_0812h(in_bytearray):
     """
     2.3.16 Чтение варианта исполнения. PRODUCTIONVAR
@@ -643,6 +831,7 @@ def answer_0812h(in_bytearray):
 
 
 if __name__ == '__main__':
+
     print(answer_081111h(bytearray([0x00, 0x2D, 0x02])))
     # must be {0: RetAnswerFunctions(Volume=5.57, DirectActive=0, DirectReactive=0)}
 
@@ -697,3 +886,6 @@ if __name__ == '__main__':
     #          ('Флаг протокола IEC61107', 'нет'),
     #          ('Reserved1', 'нет'),
     #          ('Reserved2', 'нет')]
+
+    print(answer_080Ah(bytearray([0x00, 0x00, 0x00, 0x00, 0x04, 0x00])))
+    # must be [('E03', 'Нарушено функционирование UART')]
