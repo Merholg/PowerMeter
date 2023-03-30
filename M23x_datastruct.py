@@ -645,6 +645,14 @@ def answer_0812h(in_bytearray):
 if __name__ == '__main__':
     print(answer_081111h(bytearray([0x00, 0x2D, 0x02])))
     # must be {0: RetAnswerFunctions(Volume=5.57, DirectActive=0, DirectReactive=0)}
+
+    print(answer_081408h(bytearray([0xAA, 0xAA, 0xAA, 0xAA, 0x55, 0x55, 0x55, 0x55,
+                                    0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00])))
+    # must be {0: RetAnswerFunctions(Volume=7158278.82, DirectActive=-1, DirectReactive=1),
+    #          1: RetAnswerFunctions(Volume=3579139.41, DirectActive=1, DirectReactive=-1),
+    #          2: RetAnswerFunctions(Volume=10737418.23, DirectActive=-1, DirectReactive=-1),
+    #          3: RetAnswerFunctions(Volume=0.0, DirectActive=1, DirectReactive=1)}
+
     print(answer_081408h(bytearray([0x00, 0x40, 0xE7, 0x29, 0x00, 0x40, 0xE7, 0x29,
                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])))
     # must be {0: RetAnswerFunctions(Volume=107.27, DirectActive=1, DirectReactive=-1),
