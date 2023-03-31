@@ -141,19 +141,20 @@ class STATEWORD:
             "E48": "Напряжение батарейки ниже 2.65(В)"
         }
 
+    m = 6
+
     def __init__(self, in_bytearray):
         super().__init__()
-        self.m = 6
         if isinstance(in_bytearray, bytearray):
             self.n = len(in_bytearray)
-            if self.n < self.m:
+            if self.n < STATEWORD.m:
                 self.in_bytearray = in_bytearray[:]
-                for i in range(self.m - self.n):
+                for i in range(STATEWORD.m - self.n):
                     self.in_bytearray.append(0)
             else:
-                self.in_bytearray = in_bytearray[:self.m]
+                self.in_bytearray = in_bytearray[:STATEWORD.m]
         else:
-            self.in_bytearray = bytearray([0] * self.m)
+            self.in_bytearray = bytearray([0] * STATEWORD.m)
 
         self.byte_b1 = self.ByteX11111111()
         self.byte_b2 = self.ByteX11111111()
@@ -478,19 +479,20 @@ class RELEASEVAR:
             'Reserved2': StatusVar(Descript='Reserved2', Volumes={0: 'нет'})
         }
 
+    m = 6
+
     def __init__(self, in_bytearray):
         super().__init__()
-        self.m = 6
         if isinstance(in_bytearray, bytearray):
             self.n = len(in_bytearray)
-            if self.n < self.m:
+            if self.n < RELEASEVAR.m:
                 self.in_bytearray = in_bytearray[:]
-                for i in range(self.m - self.n):
+                for i in range(RELEASEVAR.m - self.n):
                     self.in_bytearray.append(0)
             else:
-                self.in_bytearray = in_bytearray[:self.m]
+                self.in_bytearray = in_bytearray[:RELEASEVAR.m]
         else:
-            self.in_bytearray = bytearray([0] * self.m)
+            self.in_bytearray = bytearray([0] * RELEASEVAR.m)
 
         self.byte_b1 = self.ByteB1X2222()
         self.byte_b2 = self.ByteB2X41111()
@@ -567,23 +569,21 @@ class B1B2:
         unsigned char B2          :8; //байт 2
     };
     """
+    m = 2
 
     def __init__(self, in_bytearray):
         super().__init__()
-        m = 2
         if isinstance(in_bytearray, bytearray):
-            n = len(in_bytearray)
-            if n < m:
+            self.n = len(in_bytearray)
+            if self.n < B1B2.m:
                 self.in_bytearray = in_bytearray[:]
-                for i in range(m - n):
+                for i in range(B1B2.m - self.n):
                     self.in_bytearray.append(0)
             else:
-                self.in_bytearray = in_bytearray[:m]
+                self.in_bytearray = in_bytearray[:B1B2.m]
         else:
-            self.in_bytearray = bytearray([0] * m)
+            self.in_bytearray = bytearray([0] * B1B2.m)
 
-        self.direct_active = 0
-        self.direct_reactive = 0
         self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[1]]),
                                      byteorder='big', signed=False)
 
@@ -596,23 +596,21 @@ class B2B1:
         unsigned char B1          :8; //байт 1
     };
     """
+    m = 2
 
     def __init__(self, in_bytearray):
         super().__init__()
-        m = 2
         if isinstance(in_bytearray, bytearray):
-            n = len(in_bytearray)
-            if n < m:
+            self.n = len(in_bytearray)
+            if self.n < B2B1.m:
                 self.in_bytearray = in_bytearray[:]
-                for i in range(m - n):
+                for i in range(B2B1.m - self.n):
                     self.in_bytearray.append(0)
             else:
-                self.in_bytearray = in_bytearray[:m]
+                self.in_bytearray = in_bytearray[:B2B1.m]
         else:
-            self.in_bytearray = bytearray([0] * m)
+            self.in_bytearray = bytearray([0] * B2B1.m)
 
-        self.direct_active = 0
-        self.direct_reactive = 0
         self.volume = int.from_bytes(bytearray([self.in_bytearray[1], self.in_bytearray[0]]),
                                      byteorder='big', signed=False)
 
@@ -626,23 +624,21 @@ class B1B3B2:
         unsigned char B2          :8; //байт 2
     };
     """
+    m = 3
 
     def __init__(self, in_bytearray):
         super().__init__()
-        m = 3
         if isinstance(in_bytearray, bytearray):
-            n = len(in_bytearray)
-            if n < m:
+            self.n = len(in_bytearray)
+            if self.n < B1B3B2.m:
                 self.in_bytearray = in_bytearray[:]
-                for i in range(m - n):
+                for i in range(B1B3B2.m - self.n):
                     self.in_bytearray.append(0)
             else:
-                self.in_bytearray = in_bytearray[:m]
+                self.in_bytearray = in_bytearray[:B1B3B2.m]
         else:
-            self.in_bytearray = bytearray([0] * m)
+            self.in_bytearray = bytearray([0] * B1B3B2.m)
 
-        self.direct_active = 0
-        self.direct_reactive = 0
         self.volume = int.from_bytes(bytearray([self.in_bytearray[0], self.in_bytearray[2], self.in_bytearray[1]]),
                                      byteorder='big', signed=False)
 
@@ -657,23 +653,21 @@ class B2B1B4B3:
         unsigned char B3          :8; //байт 3
     };
     """
+    m = 4
 
     def __init__(self, in_bytearray):
         super().__init__()
-        m = 4
         if isinstance(in_bytearray, bytearray):
-            n = len(in_bytearray)
-            if n < m:
+            self.n = len(in_bytearray)
+            if self.n < B2B1B4B3.m:
                 self.in_bytearray = in_bytearray[:]
-                for i in range(m - n):
+                for i in range(B2B1B4B3.m - self.n):
                     self.in_bytearray.append(0)
             else:
-                self.in_bytearray = in_bytearray[:m]
+                self.in_bytearray = in_bytearray[:B2B1B4B3.m]
         else:
-            self.in_bytearray = bytearray([0] * m)
+            self.in_bytearray = bytearray([0] * B2B1B4B3.m)
 
-        self.direct_active = 0
-        self.direct_reactive = 0
         self.volume = int.from_bytes(bytearray([self.in_bytearray[1], self.in_bytearray[0], self.in_bytearray[3],
                                                 self.in_bytearray[2]]), byteorder='big', signed=False)
 
@@ -689,20 +683,20 @@ class B1x2x6B3B2:
         unsigned char B2          :8; //байт 2
     };
     """
+    m = 3
 
     def __init__(self, in_bytearray):
         super().__init__()
-        m = 3
         if isinstance(in_bytearray, bytearray):
-            n = len(in_bytearray)
-            if n < m:
+            self.n = len(in_bytearray)
+            if self.n < B1x2x6B3B2.m:
                 self.in_bytearray = in_bytearray[:]
-                for i in range(m - n):
+                for i in range(B1x2x6B3B2.m - self.n):
                     self.in_bytearray.append(0)
             else:
-                self.in_bytearray = in_bytearray[:m]
+                self.in_bytearray = in_bytearray[:B1x2x6B3B2.m]
         else:
-            self.in_bytearray = bytearray([0] * m)
+            self.in_bytearray = bytearray([0] * B1x2x6B3B2.m)
         self.byte_ddb6 = ByteX2X6()
 
         self.byte_ddb6.one_byte = self.in_bytearray[0]
@@ -724,20 +718,20 @@ class B2B1x2x6B4B3:
         unsigned char B3          :8; //байт 3
     };
     """
+    m = 4
 
     def __init__(self, in_bytearray):
         super().__init__()
-        m = 4
         if isinstance(in_bytearray, bytearray):
-            n = len(in_bytearray)
-            if n < m:
+            self.n = len(in_bytearray)
+            if self.n < B2B1x2x6B4B3.m:
                 self.in_bytearray = in_bytearray[:]
-                for i in range(m - n):
+                for i in range(B2B1x2x6B4B3.m - self.n):
                     self.in_bytearray.append(0)
             else:
-                self.in_bytearray = in_bytearray[:m]
+                self.in_bytearray = in_bytearray[:B2B1x2x6B4B3.m]
         else:
-            self.in_bytearray = bytearray([0] * m)
+            self.in_bytearray = bytearray([0] * B2B1x2x6B4B3.m)
         self.byte_ddb6 = ByteX2X6()
 
         self.byte_ddb6.one_byte = self.in_bytearray[1]
@@ -747,7 +741,7 @@ class B2B1x2x6B4B3:
                                                 self.in_bytearray[2]]), byteorder='big', signed=False)
 
 
-def answer_081111h(in_bytearray):
+class Voltage081111h:
     """
     Прочитать напряжения по 1-ой фазе для счетчика с сетевым адресом 128 (используем запрос с номером 11h).
     Запрос: 80 08 11 11 (CRC)
@@ -758,18 +752,13 @@ def answer_081111h(in_bytearray):
     :param in_bytearray: возвращаемая при вызове запроса 0811h последовательность байт в виде байтмассива
     :return: словарь с кортежем -  фаза: (величина, направление активной мощности , направление реактивной мощности)
     """
-    phase = dict()
-    m = 3  # общая длина последовательности
-    k = 3  # длина последовательности по каждой фазе
-    trust_bytearray = in_bytearray[:] if isinstance(in_bytearray, bytearray) and (
-            len(in_bytearray) == m) else bytearray([0] * m)
-
-    for i in range(0, m, k):
-        power = B1B3B2(trust_bytearray[i:i + k])
-        phase[len(phase)] = RetAnswerFunctions(Volume=(power.volume / Physics.VOLTAGE),
-                                               DirectActive=0, DirectReactive=0)
-
-    return phase
+    def __init__(self, in_bytearray):
+        super().__init__()
+        self.volume_dict = dict()
+        self.volume = B1B3B2(in_bytearray).volume / Physics.VOLTAGE
+        self.volume_dict['VoltagePhase1'] = DecodedAnswer(Descr='Напряжение 1й фазы (В)',
+                                                          StrVolume=format(self.volume, '.2f'),
+                                                          DigVolume=self.volume)
 
 
 def answer_081408h(in_bytearray):
@@ -805,7 +794,7 @@ def answer_081408h(in_bytearray):
 
 
 if __name__ == '__main__':
-    print(answer_081111h(bytearray([0x00, 0x2D, 0x02])))
+    print(Voltage081111h(bytearray([0x00, 0x2D, 0x02])).volume_dict)
     # must be {0: RetAnswerFunctions(Volume=5.57, DirectActive=0, DirectReactive=0)}
 
     print(answer_081408h(bytearray([0xAA, 0xAA, 0xAA, 0xAA, 0x55, 0x55, 0x55, 0x55,
@@ -821,4 +810,3 @@ if __name__ == '__main__':
     #          1: RetAnswerFunctions(Volume=107.27, DirectActive=1, DirectReactive=-1),
     #          2: RetAnswerFunctions(Volume=0.0, DirectActive=1, DirectReactive=1),
     #          3: RetAnswerFunctions(Volume=0.0, DirectActive=1, DirectReactive=1)}
-
