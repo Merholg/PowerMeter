@@ -795,10 +795,10 @@ class ApparentPowerS081408h:
     @dataclass(frozen=True)
     class PhasePowers:
         D = {
-            0: "PowerPhaseSum",
-            1: "PowerPhaseI",
-            2: "PowerPhaseII",
-            3: "PowerPhaseIII"
+            0: StatusVar(Descript='Значение мгновенной полной мощности по сумме фаз', Volumes='PowerPhaseSUM'),
+            1: StatusVar(Descript='Значение мгновенной полной мощности по 1-ой фазе', Volumes='PowerPhaseI'),
+            2: StatusVar(Descript='Значение мгновенной полной мощности по 2-ой фазе', Volumes='PowerPhaseII'),
+            3: StatusVar(Descript='Значение мгновенной полной мощности по 3-ей фазе', Volumes='PowerPhaseIII')
         }
 
     def __init__(self, in_bytearray):
@@ -812,26 +812,58 @@ class ApparentPowerS081408h:
         #                                                  DigVolume=self.volume)
         self.i = 0
         for self.i in range(0, ApparentPowerS081408h.m, ApparentPowerS081408h.k):
-            self.volume = B2B1x2x6B4B3(self.in_bytearray[self.i:self.i + ApparentPowerS081408h.k]).volume / Physics.POWER
-            self.volume_dict[''len(phase)] = RetAnswerFunctions(Volume=(power.volume / Physics.POWER),
-                                                   DirectActive=power.direct_active,
-                                                   DirectReactive=power.direct_reactive)
+            self.lenght = len(self.volume_dict)
+            if self.lenght in ApparentPowerS081408h.PhasePowers.D:
+                self.volume = B2B1x2x6B4B3(self.in_bytearray[self.i:self.i + ApparentPowerS081408h.k]).volume \
+                              / Physics.POWER
+                self.current = self.lenght
+                self.descr = ApparentPowerS081408h.PhasePowers.D[self.current].Descript
+                self.key = ApparentPowerS081408h.PhasePowers.D[self.current].Volumes
+                self.volume_dict[self.key] = DecodedAnswer(Descr=self.descr,
+                                                           StrVolume=format(self.volume, '.2f'),
+                                                           DigVolume=self.volume)
 
 
 if __name__ == '__main__':
     print(VoltagePhaseI081111h(bytearray([0x00, 0x2D, 0x02])).volume_dict)
     # must be {0: RetAnswerFunctions(Volume=5.57, DirectActive=0, DirectReactive=0)}
+    # must be {'VoltagePhase1': DecodedAnswer(Descr='Напряжение 1й фазы (В)', StrVolume='5.57', DigVolume=5.57)}
 
-    print(answer_081408h(bytearray([0xAA, 0xAA, 0xAA, 0xAA, 0x55, 0x55, 0x55, 0x55,
-                                    0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00])))
+
+    print(ApparentPowerS081408h(bytearray([0xAA, 0xAA, 0xAA, 0xAA, 0x55, 0x55, 0x55, 0x55,
+                                           0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00])).volume_dict)
     # must be {0: RetAnswerFunctions(Volume=7158278.82, DirectActive=-1, DirectReactive=1),
     #          1: RetAnswerFunctions(Volume=3579139.41, DirectActive=1, DirectReactive=-1),
     #          2: RetAnswerFunctions(Volume=10737418.23, DirectActive=-1, DirectReactive=-1),
     #          3: RetAnswerFunctions(Volume=0.0, DirectActive=1, DirectReactive=1)}
+    # must be {'PowerPhaseSUM': DecodedAnswer(Descr='Значение мгновенной полной мощности по сумме фаз',
+    #                           StrVolume='7158278.82',
+    #                           DigVolume=7158278.82),
+    #          'PowerPhaseI':   DecodedAnswer(Descr='Значение мгновенной полной мощности по 1-ой фазе',
+    #                           StrVolume='3579139.41',
+    #                           DigVolume=3579139.41),
+    #          'PowerPhaseII':  DecodedAnswer(Descr='Значение мгновенной полной мощности по 2-ой фазе',
+    #                           StrVolume='10737418.23',
+    #                           DigVolume=10737418.23),
+    #          'PowerPhaseIII': DecodedAnswer(Descr='Значение мгновенной полной мощности по 3-ей фазе',
+    #                           StrVolume='0.00',
+    #                           DigVolume=0.0)}
 
-    print(answer_081408h(bytearray([0x00, 0x40, 0xE7, 0x29, 0x00, 0x40, 0xE7, 0x29,
-                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])))
+    print(ApparentPowerS081408h(bytearray([0x00, 0x40, 0xE7, 0x29, 0x00, 0x40, 0xE7, 0x29,
+                                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])).volume_dict)
     # must be {0: RetAnswerFunctions(Volume=107.27, DirectActive=1, DirectReactive=-1),
     #          1: RetAnswerFunctions(Volume=107.27, DirectActive=1, DirectReactive=-1),
     #          2: RetAnswerFunctions(Volume=0.0, DirectActive=1, DirectReactive=1),
     #          3: RetAnswerFunctions(Volume=0.0, DirectActive=1, DirectReactive=1)}
+    # must be {'PowerPhaseSUM': DecodedAnswer(Descr='Значение мгновенной полной мощности по сумме фаз',
+    #                           StrVolume='107.27',
+    #                           DigVolume=107.27),
+    #          'PowerPhaseI':   DecodedAnswer(Descr='Значение мгновенной полной мощности по 1-ой фазе',
+    #                           StrVolume='107.27',
+    #                           DigVolume=107.27),
+    #          'PowerPhaseII':  DecodedAnswer(Descr='Значение мгновенной полной мощности по 2-ой фазе',
+    #                           StrVolume='0.00',
+    #                           DigVolume=0.0),
+    #          'PowerPhaseIII': DecodedAnswer(Descr='Значение мгновенной полной мощности по 3-ей фазе',
+    #                           StrVolume='0.00',
+    #                           DigVolume=0.0)}
