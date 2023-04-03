@@ -806,19 +806,14 @@ class ApparentPowerS081408h:
         self.volume_dict = dict()
         self.in_bytearray = bytearray([0] * ApparentPowerS081408h.m) if not isinstance(in_bytearray, bytearray) or (
                 len(in_bytearray) < ApparentPowerS081408h.m) else in_bytearray[:ApparentPowerS081408h.m]
-        # self.volume = B1B3B2(in_bytearray).volume / Physics.VOLTAGE
-        # self.volume_dict['VoltagePhase1'] = DecodedAnswer(Descr='Напряжение 1й фазы (В)',
-        #                                                  StrVolume=format(self.volume, '.2f'),
-        #                                                  DigVolume=self.volume)
         self.i = 0
         for self.i in range(0, ApparentPowerS081408h.m, ApparentPowerS081408h.k):
-            self.lenght = len(self.volume_dict)
-            if self.lenght in ApparentPowerS081408h.PhasePowers.D:
+            self.current_lenght = len(self.volume_dict)
+            if self.current_lenght in ApparentPowerS081408h.PhasePowers.D:
                 self.volume = B2B1x2x6B4B3(self.in_bytearray[self.i:self.i + ApparentPowerS081408h.k]).volume \
                               / Physics.POWER
-                self.current = self.lenght
-                self.descr = ApparentPowerS081408h.PhasePowers.D[self.current].Descript
-                self.key = ApparentPowerS081408h.PhasePowers.D[self.current].Volumes
+                self.descr = ApparentPowerS081408h.PhasePowers.D[self.current_lenght].Descript
+                self.key = ApparentPowerS081408h.PhasePowers.D[self.current_lenght].Volumes
                 self.volume_dict[self.key] = DecodedAnswer(Descr=self.descr,
                                                            StrVolume=format(self.volume, '.2f'),
                                                            DigVolume=self.volume)
@@ -828,7 +823,6 @@ if __name__ == '__main__':
     print(VoltagePhaseI081111h(bytearray([0x00, 0x2D, 0x02])).volume_dict)
     # must be {0: RetAnswerFunctions(Volume=5.57, DirectActive=0, DirectReactive=0)}
     # must be {'VoltagePhase1': DecodedAnswer(Descr='Напряжение 1й фазы (В)', StrVolume='5.57', DigVolume=5.57)}
-
 
     print(ApparentPowerS081408h(bytearray([0xAA, 0xAA, 0xAA, 0xAA, 0x55, 0x55, 0x55, 0x55,
                                            0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00])).volume_dict)
