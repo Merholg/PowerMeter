@@ -754,10 +754,12 @@ class VoltagePhaseI081111h:
     N = 00565Bh = 22423d U = 22423/100 = 224,43 В
     фаза 0 - сумма фаз
     :param in_bytearray: возвращаемая при вызове запроса 0811h последовательность байт в виде байтмассива
-    :return: словарь с кортежем -  словарь ключ = VoltagePhase1 с кортежем DecodedAnswer Descr='Напряжение 1й фазы (В)',
-                                                                                StrVolume= напряжение строчного типа ,
-                                                                                DigVolume= напряжение численного типа
+    :return: volume_dict словарь с кортежем -  ключ = VoltagePhase1
+                      с кортежем DecodedAnswer Descr='Напряжение 1й фазы (В)',
+                                               StrVolume= напряжение строчного типа ,
+                                               DigVolume= напряжение численного типа
     """
+
     def __init__(self, in_bytearray):
         super().__init__()
         self.volume_dict = dict()
@@ -767,7 +769,7 @@ class VoltagePhaseI081111h:
                                                           DigVolume=self.volume)
 
 
-def answer_081408h(in_bytearray):
+class ApparentPowerS081408h:
     """
     Прочитать мгновенную полную мощность по сумме фаз для счетчика с сетевым адресом 128
     (используем запрос с номером 14h).
@@ -787,22 +789,37 @@ def answer_081408h(in_bytearray):
     :param in_bytearray: возвращаемая при вызове запроса 0814h последовательность байт в виде байтмассива
     :return: словарь с кортежем -  фаза: (величина, направление активной мощности , направление реактивной мощности)
     """
-    phase = dict()
     m = 16  # общая длина последовательности
     k = 4  # длина последовательности по каждой фазе
-    trust_bytearray = in_bytearray[:] if isinstance(in_bytearray, bytearray) and (
-            len(in_bytearray) == m) else bytearray([0] * m)
 
-    for i in range(0, m, k):
-        power = B2B1x2x6B4B3(trust_bytearray[i:i + k])
-        phase[len(phase)] = RetAnswerFunctions(Volume=(power.volume / Physics.POWER),
-                                               DirectActive=power.direct_active, DirectReactive=power.direct_reactive)
+    @dataclass(frozen=True)
+    class PhasePowers:
+        D = {
+            0: "PowerPhaseSum",
+            1: "PowerPhaseI",
+            2: "PowerPhaseII",
+            3: "PowerPhaseIII"
+        }
 
-    return phase
+    def __init__(self, in_bytearray):
+        super().__init__()
+        self.volume_dict = dict()
+        self.in_bytearray = bytearray([0] * ApparentPowerS081408h.m) if not isinstance(in_bytearray, bytearray) or (
+                len(in_bytearray) < ApparentPowerS081408h.m) else in_bytearray[:ApparentPowerS081408h.m]
+        # self.volume = B1B3B2(in_bytearray).volume / Physics.VOLTAGE
+        # self.volume_dict['VoltagePhase1'] = DecodedAnswer(Descr='Напряжение 1й фазы (В)',
+        #                                                  StrVolume=format(self.volume, '.2f'),
+        #                                                  DigVolume=self.volume)
+        self.i = 0
+        for self.i in range(0, ApparentPowerS081408h.m, ApparentPowerS081408h.k):
+            self.volume = B2B1x2x6B4B3(self.in_bytearray[self.i:self.i + ApparentPowerS081408h.k]).volume / Physics.POWER
+            self.volume_dict[''len(phase)] = RetAnswerFunctions(Volume=(power.volume / Physics.POWER),
+                                                   DirectActive=power.direct_active,
+                                                   DirectReactive=power.direct_reactive)
 
 
 if __name__ == '__main__':
-    print(Voltage081111h(bytearray([0x00, 0x2D, 0x02])).volume_dict)
+    print(VoltagePhaseI081111h(bytearray([0x00, 0x2D, 0x02])).volume_dict)
     # must be {0: RetAnswerFunctions(Volume=5.57, DirectActive=0, DirectReactive=0)}
 
     print(answer_081408h(bytearray([0xAA, 0xAA, 0xAA, 0xAA, 0x55, 0x55, 0x55, 0x55,
