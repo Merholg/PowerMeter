@@ -10,6 +10,7 @@ c_uint32 = ctypes.c_uint32
 
 StatusVar = namedtuple('StatusVar', 'Descript Volumes')
 DecodedAnswer = namedtuple('DecodedAnswer', 'Descr StrVolume DigVolume')
+Req0811xxh = namedtuple('Req0811xxh', 'ClassPTR Descr Factor')
 
 
 @dataclass(frozen=True)
@@ -763,6 +764,11 @@ class Request0811xxh:
         self.volume_dict[key] = DecodedAnswer(Descr=descr,
                                               StrVolume=format(self.volume, '.2f'),
                                               DigVolume=self.volume)
+
+
+@dataclass(frozen=True)
+class Requests_0811xxh:
+    D = {'VoltagePhase1': Req0811xxh(ClassPTR='Request0811xxh', Descr='Напряжение 1й фазы (В)', Factor=Physics.VOLTAGE)}
 
 
 class VoltagePhaseI_081111h(Request0811xxh):
