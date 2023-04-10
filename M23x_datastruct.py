@@ -745,15 +745,29 @@ class B2B1x2x6B4B3:
                                                 self.in_bytearray[2]]), byteorder='big', signed=False)
 
 
-class VoltagePhaseI081111h:
+class Request0811xxh:
     """
-    Прочитать напряжения по 1-ой фазе для счетчика с сетевым адресом 128 (используем запрос с номером 11h).
-    Запрос: 80 08 11 11 (CRC)
-    Ответ: 80 00 5B 56 (CRC)
-    Значение напряжения на 1-ой фазе
-    N = 00565Bh = 22423d U = 22423/100 = 224,43 В
-    фаза 0 - сумма фаз
-    :param in_bytearray: возвращаемая при вызове запроса 0811h последовательность байт в виде байтмассива
+    2.3.15 Чтение вспомогательных параметров.
+    Команда предназначена для чтения вспомогательных параметров: мгновенной активной, реактивной, полной мощности,
+    напряжения тока, коэффициента мощности, частоты, угла между фазными напряжениями, коэффициента искажения
+    синусоидальности фазных напряжений, температуры внутри корпуса прибора, а также даты и времени фиксации,
+    зафиксированной энергии.
+    Код параметров: 11h.
+    Поле параметров – поле BWRI.
+    """
+
+    def __init__(self, in_bytearray, key, descr, physics):
+        super().__init__()
+        self.volume_dict = dict()
+        self.volume = B1B3B2(in_bytearray).volume / physics
+        self.volume_dict[key] = DecodedAnswer(Descr=descr,
+                                              StrVolume=format(self.volume, '.2f'),
+                                              DigVolume=self.volume)
+
+
+class VoltagePhaseI_081111h(Request0811xxh):
+    """
+    :param in_bytearray: возвращаемая при вызове запроса 081111h последовательность байт в виде байтмассива
     :return: volume_dict словарь с кортежем -  ключ = VoltagePhase1
                       с кортежем DecodedAnswer Descr='Напряжение 1й фазы (В)',
                                                StrVolume= напряжение строчного типа ,
@@ -761,12 +775,36 @@ class VoltagePhaseI081111h:
     """
 
     def __init__(self, in_bytearray):
-        super().__init__()
-        self.volume_dict = dict()
-        self.volume = B1B3B2(in_bytearray).volume / Physics.VOLTAGE
-        self.volume_dict['VoltagePhase1'] = DecodedAnswer(Descr='Напряжение 1й фазы (В)',
-                                                          StrVolume=format(self.volume, '.2f'),
-                                                          DigVolume=self.volume)
+        super().__init__(in_bytearray, 'VoltagePhase1', 'Напряжение 1й фазы (В)', Physics.VOLTAGE)
+        self.volume_dict = super().volume_dict
+
+
+class VoltagePhaseII_081112h(Request0811xxh):
+    """
+    :param in_bytearray: возвращаемая при вызове запроса 081112h последовательность байт в виде байтмассива
+    :return: volume_dict словарь с кортежем -  ключ = VoltagePhase2
+                      с кортежем DecodedAnswer Descr='Напряжение 2й фазы (В)',
+                                               StrVolume= напряжение строчного типа ,
+                                               DigVolume= напряжение численного типа
+    """
+
+    def __init__(self, in_bytearray):
+        super().__init__(in_bytearray, 'VoltagePhase2', 'Напряжение 2й фазы (В)', Physics.VOLTAGE)
+        self.volume_dict = super().volume_dict
+
+
+class VoltagePhaseIII_081113h(Request0811xxh):
+    """
+    :param in_bytearray: возвращаемая при вызове запроса 081113h последовательность байт в виде байтмассива
+    :return: volume_dict словарь с кортежем -  ключ = VoltagePhase3
+                      с кортежем DecodedAnswer Descr='Напряжение 3й фазы (В)',
+                                               StrVolume= напряжение строчного типа ,
+                                               DigVolume= напряжение численного типа
+    """
+
+    def __init__(self, in_bytearray):
+        super().__init__(in_bytearray, 'VoltagePhase3', 'Напряжение 3й фазы (В)', Physics.VOLTAGE)
+        self.volume_dict = super().volume_dict
 
 
 class ApparentPowerS081408h:
@@ -820,8 +858,14 @@ class ApparentPowerS081408h:
 
 
 if __name__ == '__main__':
-    print(VoltagePhaseI081111h(bytearray([0x00, 0x2D, 0x02])).volume_dict)
-    # must be {0: RetAnswerFunctions(Volume=5.57, DirectActive=0, DirectReactive=0)}
+    print(VoltagePhaseI_081111h(bytearray([0x00, 0x2D, 0x02])).volume_dict)
+    """
+    Прочитать напряжения по 1-ой фазе для счетчика с сетевым адресом 128 (используем запрос с номером 11h).
+    Запрос: 80 08 11 11 (CRC)
+    Ответ: 80 00 5B 56 (CRC)
+    Значение напряжения на 1-ой фазе
+    N = 00565Bh = 22423d U = 22423/100 = 224,43 В
+    """
     # must be {'VoltagePhase1': DecodedAnswer(Descr='Напряжение 1й фазы (В)', StrVolume='5.57', DigVolume=5.57)}
 
     print(ApparentPowerS081408h(bytearray([0xAA, 0xAA, 0xAA, 0xAA, 0x55, 0x55, 0x55, 0x55,
