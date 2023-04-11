@@ -761,6 +761,7 @@ class Request0811xxh:
         self.volume_dict = dict()
         self.b1b3b2 = B1B3B2(in_bytearray)
         self.volume = self.b1b3b2.volume / physics
+        del self.b1b3b2
         self.volume_dict[key] = DecodedAnswer(Descr=descr,
                                               StrVolume=format(self.volume, '.2f'),
                                               DigVolume=self.volume)
@@ -769,22 +770,14 @@ class Request0811xxh:
 def query_081111h(in_bytearray):
     """
     :param in_bytearray: возвращаемая при вызове запроса 081111h последовательность байт в виде байтмассива
-    :return: volume_dict словарь с кортежем -  ключ = VoltagePhase_I
-                      с кортежем DecodedAnswer Descr='Напряжение 1й фазы (В)',
+    :return: volume_dict словарь с кортежем:
+        ключ = VoltagePhase_I
+        кортеж = DecodedAnswer(Descr='Напряжение 1й фазы (В)',
                                                StrVolume= напряжение строчного типа ,
-                                               DigVolume= напряжение численного типа
+                                               DigVolume= напряжение численного типа)
     """
     query = Request0811xxh(in_bytearray, 'VoltagePhase_I', 'Напряжение 1й фазы (В)', Physics.VOLTAGE)
     return query.volume_dict
-
-
-QueryTuple = namedtuple('QueryTuple', 'Array DecodeFunction Description Factor')
-
-
-@dataclass(frozen=True)
-class QueryTab:
-    D = {'081111h': QueryTuple(Array=bytearray([0x08, 0x11, 0x11]), DecodeFunction=query_081111h,
-                               Description='Напряжение 1й фазы (В)', Factor=Physics.VOLTAGE)}
 
 
 class ApparentPowerS081408h:
