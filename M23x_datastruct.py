@@ -761,7 +761,7 @@ class Request0811xxh:
         self.volume_dict = dict()
         self.b1b3b2 = B1B3B2(in_bytearray)
         self.volume = self.b1b3b2.volume / physics
-        del self.b1b3b2
+        # del self.b1b3b2
         self.volume_dict[key] = DecodedAnswer(Descr=descr,
                                               StrVolume=format(self.volume, '.2f'),
                                               DigVolume=self.volume)
