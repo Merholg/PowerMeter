@@ -10,7 +10,6 @@ c_uint32 = ctypes.c_uint32
 
 StatusVar = namedtuple('StatusVar', 'Descript Volumes')
 DecodedAnswer = namedtuple('DecodedAnswer', 'Descr StrVolume DigVolume')
-Req0811xxh = namedtuple('Req0811xxh', 'ClassPTR Descr Factor')
 
 
 @dataclass(frozen=True)
@@ -760,57 +759,32 @@ class Request0811xxh:
     def __init__(self, in_bytearray, key, descr, physics):
         super().__init__()
         self.volume_dict = dict()
-        self.volume = B1B3B2(in_bytearray).volume / physics
+        self.b1b3b2 = B1B3B2(in_bytearray)
+        self.volume = self.b1b3b2.volume / physics
         self.volume_dict[key] = DecodedAnswer(Descr=descr,
                                               StrVolume=format(self.volume, '.2f'),
                                               DigVolume=self.volume)
 
 
-@dataclass(frozen=True)
-class Requests_0811xxh:
-    D = {'VoltagePhase1': Req0811xxh(ClassPTR='Request0811xxh', Descr='Напряжение 1й фазы (В)', Factor=Physics.VOLTAGE)}
-
-
-class VoltagePhaseI_081111h(Request0811xxh):
+def query_081111h(in_bytearray):
     """
     :param in_bytearray: возвращаемая при вызове запроса 081111h последовательность байт в виде байтмассива
-    :return: volume_dict словарь с кортежем -  ключ = VoltagePhase1
+    :return: volume_dict словарь с кортежем -  ключ = VoltagePhase_I
                       с кортежем DecodedAnswer Descr='Напряжение 1й фазы (В)',
                                                StrVolume= напряжение строчного типа ,
                                                DigVolume= напряжение численного типа
     """
-
-    def __init__(self, in_bytearray):
-        super().__init__(in_bytearray, 'VoltagePhase1', 'Напряжение 1й фазы (В)', Physics.VOLTAGE)
-        self.volume_dict = super().volume_dict
+    query = Request0811xxh(in_bytearray, 'VoltagePhase_I', 'Напряжение 1й фазы (В)', Physics.VOLTAGE)
+    return query.volume_dict
 
 
-class VoltagePhaseII_081112h(Request0811xxh):
-    """
-    :param in_bytearray: возвращаемая при вызове запроса 081112h последовательность байт в виде байтмассива
-    :return: volume_dict словарь с кортежем -  ключ = VoltagePhase2
-                      с кортежем DecodedAnswer Descr='Напряжение 2й фазы (В)',
-                                               StrVolume= напряжение строчного типа ,
-                                               DigVolume= напряжение численного типа
-    """
-
-    def __init__(self, in_bytearray):
-        super().__init__(in_bytearray, 'VoltagePhase2', 'Напряжение 2й фазы (В)', Physics.VOLTAGE)
-        self.volume_dict = super().volume_dict
+QueryTuple = namedtuple('QueryTuple', 'Array DecodeFunction Description Factor')
 
 
-class VoltagePhaseIII_081113h(Request0811xxh):
-    """
-    :param in_bytearray: возвращаемая при вызове запроса 081113h последовательность байт в виде байтмассива
-    :return: volume_dict словарь с кортежем -  ключ = VoltagePhase3
-                      с кортежем DecodedAnswer Descr='Напряжение 3й фазы (В)',
-                                               StrVolume= напряжение строчного типа ,
-                                               DigVolume= напряжение численного типа
-    """
-
-    def __init__(self, in_bytearray):
-        super().__init__(in_bytearray, 'VoltagePhase3', 'Напряжение 3й фазы (В)', Physics.VOLTAGE)
-        self.volume_dict = super().volume_dict
+@dataclass(frozen=True)
+class QueryTab:
+    D = {'081111h': QueryTuple(Array=bytearray([0x08, 0x11, 0x11]), DecodeFunction=query_081111h,
+                               Description='Напряжение 1й фазы (В)', Factor=Physics.VOLTAGE)}
 
 
 class ApparentPowerS081408h:
@@ -839,10 +813,10 @@ class ApparentPowerS081408h:
     @dataclass(frozen=True)
     class PhasePowers:
         D = {
-            0: StatusVar(Descript='Значение мгновенной полной мощности по сумме фаз', Volumes='PowerPhaseSUM'),
-            1: StatusVar(Descript='Значение мгновенной полной мощности по 1-ой фазе', Volumes='PowerPhaseI'),
-            2: StatusVar(Descript='Значение мгновенной полной мощности по 2-ой фазе', Volumes='PowerPhaseII'),
-            3: StatusVar(Descript='Значение мгновенной полной мощности по 3-ей фазе', Volumes='PowerPhaseIII')
+            0: StatusVar(Descript='Значение мгновенной полной мощности по сумме фаз', Volumes='PowerPhase_SUM'),
+            1: StatusVar(Descript='Значение мгновенной полной мощности по 1-ой фазе', Volumes='PowerPhase_I'),
+            2: StatusVar(Descript='Значение мгновенной полной мощности по 2-ой фазе', Volumes='PowerPhase_II'),
+            3: StatusVar(Descript='Значение мгновенной полной мощности по 3-ей фазе', Volumes='PowerPhase_III')
         }
 
     def __init__(self, in_bytearray):
@@ -864,7 +838,7 @@ class ApparentPowerS081408h:
 
 
 if __name__ == '__main__':
-    print(VoltagePhaseI_081111h(bytearray([0x00, 0x2D, 0x02])).volume_dict)
+    print(query_081111h(bytearray([0x00, 0x2D, 0x02])))
     """
     Прочитать напряжения по 1-ой фазе для счетчика с сетевым адресом 128 (используем запрос с номером 11h).
     Запрос: 80 08 11 11 (CRC)
