@@ -776,15 +776,9 @@ class Request0811xxh:
     @dataclass(frozen=True)
     class DetalVolumes:
         D = {
-            '081111h': VolumeDetal(VolKey='VoltagePhase_I',
-                                   Descript='Напряжение 1й фазы (В)',
-                                   Factor=Physics.VOLTAGE),
-            '081112h': VolumeDetal(VolKey='VoltagePhase_II',
-                                   Descript='Напряжение 1й фазы (В)',
-                                   Factor=Physics.VOLTAGE),
-            '081113h': VolumeDetal(VolKey='VoltagePhase_III',
-                                   Descript='Напряжение 1й фазы (В)',
-                                   Factor=Physics.VOLTAGE)
+            '081111h': {'VolKey': 'VoltagePhase_I', 'Descript': 'Напряжение 1й фазы (В)', 'Factor': Physics.VOLTAGE},
+            '081112h': {'VolKey': 'VoltagePhase_II', 'Descript': 'Напряжение 2й фазы (В)', 'Factor': Physics.VOLTAGE},
+            '081113h': {'VolKey': 'VoltagePhase_III', 'Descript': 'Напряжение 3й фазы (В)', 'Factor': Physics.VOLTAGE}
         }
 
     def __init__(self, query_key, in_bytearray):
@@ -794,9 +788,9 @@ class Request0811xxh:
                 (len(in_bytearray) == Request0811xxh.m) and \
                 (query_key in Request0811xxh.DetalVolumes.D):
             self.b1b3b2 = B1B3B2(in_bytearray)
-            self.volume = self.b1b3b2.volume / Request0811xxh.DetalVolumes.D[query_key].Factor
-            self.volume_dict[Request0811xxh.DetalVolumes.D[query_key].VolKey] = \
-                DecodedAnswer(Descr=Request0811xxh.DetalVolumes.D[query_key].Descript,
+            self.volume = self.b1b3b2.volume / Request0811xxh.DetalVolumes.D[query_key]['Factor']
+            self.volume_dict[Request0811xxh.DetalVolumes.D[query_key]['VolKey']] = \
+                DecodedAnswer(Descr=Request0811xxh.DetalVolumes.D[query_key]['Descript'],
                               StrVolume=format(self.volume, '.2f'),
                               DigVolume=self.volume)
 
@@ -827,45 +821,51 @@ class Request08140xh:
     @dataclass(frozen=True)
     class DetalPhasedVolumes:
         D = {
-            '081408h': {0: VolumeDetal(VolKey='ApparentPowerPhase_SUM',
-                                       Descript='Значение мгновенной полной мощности по сумме фаз',
-                                       Factor=Physics.POWER),
-                        1: VolumeDetal(VolKey='ApparentPowerPhase_I',
-                                       Descript='Значение мгновенной полной мощности по 1-ой фазе',
-                                       Factor=Physics.POWER),
-                        2: VolumeDetal(VolKey='ApparentPowerPhase_II',
-                                       Descript='Значение мгновенной полной мощности по 2-ой фазе',
-                                       Factor=Physics.POWER),
-                        3: VolumeDetal(VolKey='ApparentPowerPhase_III',
-                                       Descript='Значение мгновенной полной мощности по 3-ой фазе',
-                                       Factor=Physics.POWER)
+            '081408h': {
+                            'DirectA': 0,
+                            'DirectR': 0,
+                            'Phase':
+                            {
+                                0: {'VolKey': 'ApparentPowerPhase_SUM',
+                                    'Descript': 'Значение мгновенной полной мощности по сумме фаз'},
+                                1: {'VolKey': 'ApparentPowerPhase_I',
+                                    'Descript': 'Значение мгновенной полной мощности по 1-ой фазе'},
+                                2: {'VolKey': 'ApparentPowerPhase_II',
+                                    'Descript': 'Значение мгновенной полной мощности по 2-ой фазе'},
+                                3: {'VolKey': 'ApparentPowerPhase_III',
+                                    'Descript': 'Значение мгновенной полной мощности по 3-ой фазе'}
+                            }
                         },
-            '081404h': {0: VolumeDetal(VolKey='ReactivePowerPhase_SUM',
-                                       Descript='Значение мгновенной реактивной мощности по сумме фаз',
-                                       Factor=Physics.POWER),
-                        1: VolumeDetal(VolKey='ReactivePowerPhase_I',
-                                       Descript='Значение мгновенной реактивной мощности по 1-ой фазе',
-                                       Factor=Physics.POWER),
-                        2: VolumeDetal(VolKey='ReactivePowerPhase_II',
-                                       Descript='Значение мгновенной реактивной мощности по 2-ой фазе',
-                                       Factor=Physics.POWER),
-                        3: VolumeDetal(VolKey='ReactivePowerPhase_III',
-                                       Descript='Значение мгновенной реактивной мощности по 3-ой фазе',
-                                       Factor=Physics.POWER)
-                        },
-            '081400h': {0: VolumeDetal(VolKey='TruePowerPhase_SUM',
-                                       Descript='Значение мгновенной активной мощности по сумме фаз',
-                                       Factor=Physics.POWER),
-                        1: VolumeDetal(VolKey='TruePowerPhase_I',
-                                       Descript='Значение мгновенной активной мощности по 1-ой фазе',
-                                       Factor=Physics.POWER),
-                        2: VolumeDetal(VolKey='TruePowerPhase_II',
-                                       Descript='Значение мгновенной активной мощности по 2-ой фазе',
-                                       Factor=Physics.POWER),
-                        3: VolumeDetal(VolKey='TruePowerPhase_III',
-                                       Descript='Значение мгновенной активной мощности по 3-ой фазе',
-                                       Factor=Physics.POWER)
-                        }
+            '081404h': {
+                'DirectA': 0,
+                'DirectR': 1,
+                'Phase':
+                    {
+                        0: {'VolKey': 'ReactivePowerPhase_SUM',
+                            'Descript': 'Значение мгновенной реактивной мощности по сумме фаз'},
+                        1: {'VolKey': 'ReactivePowerPhase_I',
+                            'Descript': 'Значение мгновенной реактивной мощности по 1-ой фазе'},
+                        2: {'VolKey': 'ReactivePowerPhase_II',
+                            'Descript': 'Значение мгновенной реактивной мощности по 2-ой фазе'},
+                        3: {'VolKey': 'ReactivePowerPhase_III',
+                            'Descript': 'Значение мгновенной реактивной мощности по 3-ой фазе'}
+                    }
+            },
+            '081400h': {
+                'DirectA': 1,
+                'DirectR': 0,
+                'Phase':
+                    {
+                        0: {'VolKey': 'TruePowerPhase_SUM',
+                            'Descript': 'Значение мгновенной активной мощности по сумме фаз'},
+                        1: {'VolKey': 'TruePowerPhase_I',
+                            'Descript': 'Значение мгновенной активной мощности по 1-ой фазе'},
+                        2: {'VolKey': 'TruePowerPhase_II',
+                            'Descript': 'Значение мгновенной активной мощности по 2-ой фазе'},
+                        3: {'VolKey': 'TruePowerPhase_III',
+                            'Descript': 'Значение мгновенной активной мощности по 3-ой фазе'}
+                    }
+            }
         }
 
     def __init__(self, query_key, in_bytearray):
