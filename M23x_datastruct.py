@@ -811,8 +811,9 @@ class AUXILIARYDATA:
                     self.volkey = AUXILIARYDATA.AnswerTable.D[query_key]['Phase'][self.current_lenght]['VolKey']
                     self.descript = AUXILIARYDATA.AnswerTable.D[query_key]['Phase'][self.current_lenght]['Descript']
                 else:
-                    self.volkey = 'UNDEFINED_{0}, {1}'.format(query_key, str(self.current_lenght))
-                    self.descript = 'Unknown {0}, {1}'.format(query_key, str(self.current_lenght))
+                    self.volkey = 'UNDEFINED_{0}_{1}'.format(query_key, str(self.current_lenght))
+                    self.descript = 'Unknown volume for {0} request and phase number at {1}'.format(query_key,
+                                                                                                    str(self.current_lenght))
                 self.volume_dict[self.volkey] = DecodedAnswer(Descr=self.descript,
                                                               StrVolume=format(self.volume, '.2f'),
                                                               DigVolume=self.volume)
@@ -820,41 +821,4 @@ class AUXILIARYDATA:
 
 
 if __name__ == '__main__':
-    print(Request0811xxh('081111h', bytearray([0x00, 0x5B, 0x56])).volume_dict)
-    """
-    Прочитать напряжения по 1-ой фазе для счетчика с сетевым адресом 128 (используем запрос с номером 11h).
-    Запрос: 80 08 11 11 (CRC)
-    Ответ: 80 00 5B 56 (CRC)
-    Значение напряжения на 1-ой фазе
-    N = 00565Bh = 22107d U = 22107/100 = 221,07 В
-    """
-    # must be {'VoltagePhase_I': DecodedAnswer(Descr='Напряжение 1й фазы (В)', StrVolume='221.07', DigVolume=221.07)}
-
-    print(Request08140xh('081408h', bytearray([0xAA, 0xAA, 0xAA, 0xAA, 0x55, 0x55, 0x55, 0x55,
-                                               0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00])).volume_dict)
-    # must be {'ApparentPowerPhase_SUM': DecodedAnswer(Descr='Значение мгновенной полной мощности по сумме фаз',
-    #           StrVolume='7158278.82',
-    #           DigVolume=7158278.82),
-    #          'ApparentPowerPhase_I': DecodedAnswer(Descr='Значение мгновенной полной мощности по 1-ой фазе',
-    #           StrVolume='3579139.41',
-    #           DigVolume=3579139.41),
-    #          'ApparentPowerPhase_II': DecodedAnswer(Descr='Значение мгновенной полной мощности по 2-ой фазе',
-    #           StrVolume='10737418.23',
-    #           DigVolume=10737418.23),
-    #          'ApparentPowerPhase_III': DecodedAnswer(Descr='Значение мгновенной полной мощности по 3-ой фазе',
-    #           StrVolume='0.00',
-    #           DigVolume=0.0)}
-    print(Request08140xh('081408h', bytearray([0x00, 0x40, 0xE7, 0x29, 0x00, 0x40, 0xE7, 0x29,
-                                               0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])).volume_dict)
-    # must be {'ApparentPowerPhase_SUM': DecodedAnswer(Descr='Значение мгновенной полной мощности по сумме фаз',
-    #           StrVolume='107.27',
-    #           DigVolume=107.27),
-    #          'ApparentPowerPhase_I': DecodedAnswer(Descr='Значение мгновенной полной мощности по 1-ой фазе',
-    #           StrVolume='107.27',
-    #           DigVolume=107.27),
-    #          'ApparentPowerPhase_II': DecodedAnswer(Descr='Значение мгновенной полной мощности по 2-ой фазе',
-    #           StrVolume='0.00',
-    #           DigVolume=0.0),
-    #          'ApparentPowerPhase_III': DecodedAnswer(Descr='Значение мгновенной полной мощности по 3-ой фазе',
-    #           StrVolume='0.00',
-    #           DigVolume=0.0)}
+    pass
