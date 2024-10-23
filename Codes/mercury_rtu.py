@@ -3,12 +3,12 @@
 # import time
 from enum import Enum
 
-import serial
-from serial import STOPBITS_ONE, PARITY_NONE, EIGHTBITS
-from serial.tools import list_ports
+import pyserial
+from pyserial import STOPBITS_ONE, PARITY_NONE, EIGHTBITS
+from pyserial.tools import list_ports
 
 
-class MercuryRTU(serial.Serial):
+class MercuryRTU(pyserial.Serial):
     """
     Критерием окончания любой последовательности (фрейма) является гарантированный тайм-аут,
     длительность которого зависит от выбранной скорости:
