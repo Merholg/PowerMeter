@@ -148,10 +148,12 @@ class STATEWORD:
         super().__init__()
         if isinstance(in_bytearray, bytearray):
             self.n = len(in_bytearray)
-            if self.n == STATEWORD.m:
+            if self.n < STATEWORD.m:
                 self.in_bytearray = in_bytearray[:]
+                for i in range(STATEWORD.m - self.n):
+                    self.in_bytearray.append(0)
             else:
-                self.in_bytearray = bytearray([0] * STATEWORD.m)
+                self.in_bytearray = in_bytearray[:STATEWORD.m]
         else:
             self.in_bytearray = bytearray([0] * STATEWORD.m)
 
@@ -429,6 +431,7 @@ class RELEASEVAR:
             ("one_byte", c_uint8)
         ]
 
+    # StatusVar = namedtuple('StatusVar', 'Descript Volumes')
 
     @dataclass(frozen=True)
     class PVData:
@@ -491,10 +494,12 @@ class RELEASEVAR:
         super().__init__()
         if isinstance(in_bytearray, bytearray):
             self.n = len(in_bytearray)
-            if self.n == RELEASEVAR.m:
+            if self.n < RELEASEVAR.m:
                 self.in_bytearray = in_bytearray[:]
+                for i in range(RELEASEVAR.m - self.n):
+                    self.in_bytearray.append(0)
             else:
-                self.in_bytearray = bytearray([0] * RELEASEVAR.m)
+                self.in_bytearray = in_bytearray[:RELEASEVAR.m]
         else:
             self.in_bytearray = bytearray([0] * RELEASEVAR.m)
 
@@ -579,10 +584,12 @@ class B1B2:
         super().__init__()
         if isinstance(in_bytearray, bytearray):
             self.n = len(in_bytearray)
-            if self.n == B1B2.m:
+            if self.n < B1B2.m:
                 self.in_bytearray = in_bytearray[:]
+                for i in range(B1B2.m - self.n):
+                    self.in_bytearray.append(0)
             else:
-                self.in_bytearray = bytearray([0] * B1B2.m)
+                self.in_bytearray = in_bytearray[:B1B2.m]
         else:
             self.in_bytearray = bytearray([0] * B1B2.m)
 
@@ -606,10 +613,12 @@ class B2B1:
         super().__init__()
         if isinstance(in_bytearray, bytearray):
             self.n = len(in_bytearray)
-            if self.n == B2B1.m:
+            if self.n < B2B1.m:
                 self.in_bytearray = in_bytearray[:]
+                for i in range(B2B1.m - self.n):
+                    self.in_bytearray.append(0)
             else:
-                self.in_bytearray = bytearray([0] * B2B1.m)
+                self.in_bytearray = in_bytearray[:B2B1.m]
         else:
             self.in_bytearray = bytearray([0] * B2B1.m)
 
@@ -634,10 +643,12 @@ class B1B3B2:
         super().__init__()
         if isinstance(in_bytearray, bytearray):
             self.n = len(in_bytearray)
-            if self.n == B1B3B2.m:
+            if self.n < B1B3B2.m:
                 self.in_bytearray = in_bytearray[:]
+                for i in range(B1B3B2.m - self.n):
+                    self.in_bytearray.append(0)
             else:
-                self.in_bytearray = bytearray([0] * B1B3B2.m)
+                self.in_bytearray = in_bytearray[:B1B3B2.m]
         else:
             self.in_bytearray = bytearray([0] * B1B3B2.m)
 
@@ -663,10 +674,12 @@ class B2B1B4B3:
         super().__init__()
         if isinstance(in_bytearray, bytearray):
             self.n = len(in_bytearray)
-            if self.n == B2B1B4B3.m:
+            if self.n < B2B1B4B3.m:
                 self.in_bytearray = in_bytearray[:]
+                for i in range(B2B1B4B3.m - self.n):
+                    self.in_bytearray.append(0)
             else:
-                self.in_bytearray = bytearray([0] * B2B1B4B3.m)
+                self.in_bytearray = in_bytearray[:B2B1B4B3.m]
         else:
             self.in_bytearray = bytearray([0] * B2B1B4B3.m)
 
@@ -693,13 +706,14 @@ class B1x2x6B3B2:
         super().__init__()
         if isinstance(in_bytearray, bytearray):
             self.n = len(in_bytearray)
-            if self.n == B1x2x6B3B2.m:
+            if self.n < B1x2x6B3B2.m:
                 self.in_bytearray = in_bytearray[:]
+                for i in range(B1x2x6B3B2.m - self.n):
+                    self.in_bytearray.append(0)
             else:
-                self.in_bytearray = bytearray([0] * B1x2x6B3B2.m)
+                self.in_bytearray = in_bytearray[:B1x2x6B3B2.m]
         else:
             self.in_bytearray = bytearray([0] * B1x2x6B3B2.m)
-
         self.byte_ddb6 = ByteX2X6()
 
         self.byte_ddb6.one_byte = self.in_bytearray[0]
@@ -727,13 +741,14 @@ class B2B1x2x6B4B3:
         super().__init__()
         if isinstance(in_bytearray, bytearray):
             self.n = len(in_bytearray)
-            if self.n == B2B1x2x6B4B3.m:
+            if self.n < B2B1x2x6B4B3.m:
                 self.in_bytearray = in_bytearray[:]
+                for i in range(B2B1x2x6B4B3.m - self.n):
+                    self.in_bytearray.append(0)
             else:
-                self.in_bytearray = bytearray([0] * B2B1x2x6B4B3.m)
+                self.in_bytearray = in_bytearray[:B2B1x2x6B4B3.m]
         else:
             self.in_bytearray = bytearray([0] * B2B1x2x6B4B3.m)
-
         self.byte_ddb6 = ByteX2X6()
 
         self.byte_ddb6.one_byte = self.in_bytearray[1]
