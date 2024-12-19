@@ -1,0 +1,23 @@
+# This triggers the workflow on every push or pull request to the main branch
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'  # Specify the Python version you want to use
+
+    - name: Install dependencies
+      run: |
+        pip install pytest
+
+    - name: Run tests
+      run: |
+        pytest
