@@ -806,4 +806,8 @@ class AUXILIARYDATA:
 
 
 if __name__ == '__main__':
+    print('This is a module for decoding the answer from the E3DC server')
+    print('This module is not intended to be run as a stand alone program')
+    #print('Version: {0}'.format(AUXILIARYDATA.AnswerTable.Version))
+    
     pass
