@@ -24,7 +24,6 @@ class Physics:
     NOSINRATIO: int = 100
     TEMPERATURE: int = 1
 
-
 class ByteX2X6(ctypes.Union):
     """
     Значение 1-го байта = 40 = 01000000 -   направление активной мощности – прямое (0),
@@ -742,67 +741,119 @@ class B2B1x2x6B4B3:
         self.volume = int.from_bytes(bytearray([self.byte_ddb6.x2x6.b1, self.in_bytearray[0], self.in_bytearray[3],
                                                 self.in_bytearray[2]]), byteorder='big', signed=False)
 
-
-class AUXILIARYDATA:
-    """
-
-    """
-
-    @dataclass(frozen=True)
-    class AnswerTable:
-        # Direct > 0 - Active energy, Direct < 0 Reactive energy, Direct = 0 Not apply
-        # FullSeqLen - Full sequence length
-        # SingleSeqLen - Single sequence length
-        D = {
-            '081408h': {'DecryptClass': B2B1x2x6B4B3, 'FullSeqLen': 3, 'SingleSeqLen': 3,
-                        'Direct': 0, 'Factor': Physics.POWER,
-                        'Phase':
-                            {
-                                0: {'VolKey': 'ApparentPowerPhase_SUM',
-                                    'Descript': 'Значение мгновенной полной мощности по сумме фаз'},
-                                1: {'VolKey': 'ApparentPowerPhase_I',
-                                    'Descript': 'Значение мгновенной полной мощности по 1-ой фазе'},
-                                2: {'VolKey': 'ApparentPowerPhase_II',
-                                    'Descript': 'Значение мгновенной полной мощности по 2-ой фазе'},
-                                3: {'VolKey': 'ApparentPowerPhase_III',
-                                    'Descript': 'Значение мгновенной полной мощности по 3-ой фазе'}
-                            }
-
+@dataclass(frozen=True)
+class AnswerTable:
+    # Direct > 0 - Active energy, Direct < 0 Reactive energy, Direct = 0 Not apply
+    # FullSeqLen - Full sequence length
+    # SingleSeqLen - Single sequence length
+    D = {
+        '081408h': {'DecryptClass': B2B1x2x6B4B3, 'FullSeqLen': 3, 'SingleSeqLen': 3,
+                    'Direct': 0, 'Factor': Physics.POWER,
+                    'Phase':
+                        {
+                            0: {'VolKey': 'ApparentPowerPhase_SUM',
+                                'Descript': 'Значение мгновенной полной мощности по сумме фаз'},
+                            1: {'VolKey': 'ApparentPowerPhase_I',
+                                'Descript': 'Значение мгновенной полной мощности по 1-ой фазе'},
+                            2: {'VolKey': 'ApparentPowerPhase_II',
+                                'Descript': 'Значение мгновенной полной мощности по 2-ой фазе'},
+                            3: {'VolKey': 'ApparentPowerPhase_III',
+                                'Descript': 'Значение мгновенной полной мощности по 3-ой фазе'}
                         }
+
+                    }
         }
 
-    def __init__(self, query_key, in_bytearray):
-        super().__init__()
-        self.volume_dict = dict()
-        self.instance_dict = dict()
-        if (query_key in AUXILIARYDATA.AnswerTable.D) and isinstance(in_bytearray, bytearray):
-            self.m = AUXILIARYDATA.AnswerTable.D[query_key]['FullSeqLen']
-            self.k = AUXILIARYDATA.AnswerTable.D[query_key]['SingleSeqLen']
-            self.i = 0
-            while (self.i + self.k) <= len(in_bytearray) and (self.i + self.k) <= self.m:
-                self.current_lenght = len(self.volume_dict)
-                self.instance_dict[self.current_lenght] = \
-                    AUXILIARYDATA.AnswerTable.D[query_key]['DecryptClass'](in_bytearray[self.i:(self.i + self.k)])
-                self.direct = AUXILIARYDATA.AnswerTable.D[query_key]['Direct']
-                self.factor = AUXILIARYDATA.AnswerTable.D[query_key]['Factor']
-                if self.direct > 0:
-                    self.volume = self.instance_dict[self.current_lenght].direct_active
-                elif self.direct < 0:
-                    self.volume = self.instance_dict[self.current_lenght].direct_reactive
+def decrypt_answer(query_key, in_bytearray):
+        volume_dict = {}
+        instance_dict = {}
+        if (query_key in AnswerTable.D) and isinstance(in_bytearray, bytearray):
+            m = AnswerTable.D[query_key]['FullSeqLen']
+            k = AnswerTable.D[query_key]['SingleSeqLen']
+            i = 0
+            while (i + k) <= len(in_bytearray) and (i + k) <= m:
+                current_lenght = len(volume_dict)
+                instance_dict[current_lenght] = AnswerTable.D[query_key]['DecryptClass'](in_bytearray[i:(i + k)])
+                direct = AnswerTable.D[query_key]['Direct']
+                factor = AnswerTable.D[query_key]['Factor']
+                if direct > 0:
+                    volume = instance_dict[current_lenght].direct_active
+                elif direct < 0:
+                    volume = instance_dict[current_lenght].direct_reactive
                 else:
-                    self.volume = 1
-                self.volume *= self.instance_dict[self.current_lenght].volume / self.factor
-                if self.current_lenght in AUXILIARYDATA.AnswerTable.D[query_key]['Phase']:
-                    self.volkey = AUXILIARYDATA.AnswerTable.D[query_key]['Phase'][self.current_lenght]['VolKey']
-                    self.descript = AUXILIARYDATA.AnswerTable.D[query_key]['Phase'][self.current_lenght]['Descript']
+                    volume = 1
+                volume *= instance_dict[current_lenght].volume / factor
+                if current_lenght in AnswerTable.D[query_key]['Phase']:
+                    volkey = AnswerTable.D[query_key]['Phase'][current_lenght]['VolKey']
+                    descript = AnswerTable.D[query_key]['Phase'][current_lenght]['Descript']
                 else:
-                    self.volkey = 'UNDEFINED_{0}_{1}'.format(query_key, str(self.current_lenght))
-                    self.descript = 'Unknown volume for {0} request and phase number at {1}'.format(query_key,
-                                                                                                    str(self.current_lenght))
-                self.volume_dict[self.volkey] = DecodedAnswer(Descr=self.descript,
-                                                              StrVolume=format(self.volume, '.2f'),
-                                                              DigVolume=self.volume)
-                self.i = self.i + self.k
+                    volkey = 'UNDEFINED_{0}_{1}'.format(query_key, str(current_lenght))
+                    descript = 'Unknown volume for {0} request and phase number at {1}'.format(query_key, str(current_lenght))
+                                                                                            
+                volume_dict[volkey] = DecodedAnswer(Descr=descript, StrVolume=format(volume, '.2f'), DigVolume=volume)
+                                                              
+                i = i + k
+
+# class AUXILIARYDATA:
+#     """
+
+#     """
+
+#     @dataclass(frozen=True)
+#     class AnswerTable:
+#         # Direct > 0 - Active energy, Direct < 0 Reactive energy, Direct = 0 Not apply
+#         # FullSeqLen - Full sequence length
+#         # SingleSeqLen - Single sequence length
+#         D = {
+#             '081408h': {'DecryptClass': B2B1x2x6B4B3, 'FullSeqLen': 3, 'SingleSeqLen': 3,
+#                         'Direct': 0, 'Factor': Physics.POWER,
+#                         'Phase':
+#                             {
+#                                 0: {'VolKey': 'ApparentPowerPhase_SUM',
+#                                     'Descript': 'Значение мгновенной полной мощности по сумме фаз'},
+#                                 1: {'VolKey': 'ApparentPowerPhase_I',
+#                                     'Descript': 'Значение мгновенной полной мощности по 1-ой фазе'},
+#                                 2: {'VolKey': 'ApparentPowerPhase_II',
+#                                     'Descript': 'Значение мгновенной полной мощности по 2-ой фазе'},
+#                                 3: {'VolKey': 'ApparentPowerPhase_III',
+#                                     'Descript': 'Значение мгновенной полной мощности по 3-ой фазе'}
+#                             }
+
+#                         }
+#         }
+
+#     def __init__(self, query_key, in_bytearray):
+#         super().__init__()
+#         self.volume_dict = dict()
+#         self.instance_dict = dict()
+#         if (query_key in AUXILIARYDATA.AnswerTable.D) and isinstance(in_bytearray, bytearray):
+#             self.m = AUXILIARYDATA.AnswerTable.D[query_key]['FullSeqLen']
+#             self.k = AUXILIARYDATA.AnswerTable.D[query_key]['SingleSeqLen']
+#             self.i = 0
+#             while (self.i + self.k) <= len(in_bytearray) and (self.i + self.k) <= self.m:
+#                 self.current_lenght = len(self.volume_dict)
+#                 self.instance_dict[self.current_lenght] = \
+#                     AUXILIARYDATA.AnswerTable.D[query_key]['DecryptClass'](in_bytearray[self.i:(self.i + self.k)])
+#                 self.direct = AUXILIARYDATA.AnswerTable.D[query_key]['Direct']
+#                 self.factor = AUXILIARYDATA.AnswerTable.D[query_key]['Factor']
+#                 if self.direct > 0:
+#                     self.volume = self.instance_dict[self.current_lenght].direct_active
+#                 elif self.direct < 0:
+#                     self.volume = self.instance_dict[self.current_lenght].direct_reactive
+#                 else:
+#                     self.volume = 1
+#                 self.volume *= self.instance_dict[self.current_lenght].volume / self.factor
+#                 if self.current_lenght in AUXILIARYDATA.AnswerTable.D[query_key]['Phase']:
+#                     self.volkey = AUXILIARYDATA.AnswerTable.D[query_key]['Phase'][self.current_lenght]['VolKey']
+#                     self.descript = AUXILIARYDATA.AnswerTable.D[query_key]['Phase'][self.current_lenght]['Descript']
+#                 else:
+#                     self.volkey = 'UNDEFINED_{0}_{1}'.format(query_key, str(self.current_lenght))
+#                     self.descript = 'Unknown volume for {0} request and phase number at {1}'.format(query_key,
+#                                                                                                     str(self.current_lenght))
+#                 self.volume_dict[self.volkey] = DecodedAnswer(Descr=self.descript,
+#                                                               StrVolume=format(self.volume, '.2f'),
+#                                                               DigVolume=self.volume)
+#                 self.i = self.i + self.k
 
 
 if __name__ == '__main__':
